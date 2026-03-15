@@ -20,6 +20,10 @@ public:
         listeners_[eventName].push_back(std::move(listener));
     }
 
+    void clearListeners() {
+        listeners_.clear();
+    }
+
     template<typename E>
     bool fire(E& event) {
         auto it = listeners_.find(event.eventName);
