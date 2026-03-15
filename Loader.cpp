@@ -10,6 +10,7 @@
 #include <filesystem>
 #include <fstream>
 #include <utility>
+#include <string>
 #include "Common/EventSystem/EventHandler.h"
 
 namespace fs = std::filesystem;
@@ -22,25 +23,25 @@ Loader::Loader() {
     }
 
     registerFunctions();
-    app.DebugPrintf("Cactus modloader initalized!\n");
+    app.DebugPrintf("Cactus ModLoader initialized!\n");
     EventHandler::bindEvents(lua);
 }
 
-void Loader::_debugPrint(std::string output) {
+void Loader::_debugPrint(string output) {
     app.DebugPrintf(("[Lua] "+output+"\n").c_str());
 }
 
-nlohmann::json Loader::getManifest(std::string filePath) {
-    std::string fullPath = filePath + "/manifest.json";
+nlohmann::json Loader::getManifest(string filePath) {
+    string fullPath = filePath + "/manifest.json";
     auto data = loadFile(fullPath);
     return nlohmann::json::parse(data);
 }
 
 void Loader::registerFunctions() {
-    lua.set_function("log", [this](std::string message) {
+    lua.set_function("log", [this](string message) {
         this->log(message);
     });
-    lua.set_function("test", [this](std::string event, sol::function func) {
+    lua.set_function("test", [this](string event, sol::function func) {
         this->test(event, func);
     });
 
@@ -85,31 +86,27 @@ void Loader::registerFunctions() {
     );
 }
 
-void Loader::log(std::string message) {
+void Loader::log(string message) {
     app.DebugPrintf(("[Lua] " + message + "\n").c_str());
 }
 
-std::string Loader::loadFile(std::string fileName) {
+string Loader::loadFile(string fileName) {
     std::ifstream file(fileName);
-    std::stringstream buf;
+    stringstream buf;
     buf << file.rdbuf();
     return buf.str();
 }
 
-void Loader::test(std::string event, sol::function func) { //testing function returning from lua
+void Loader::test(string event, sol::function func) { //testing function returning from lua
     func();
 }
 
 void Loader::loadMods() {
-    for (auto & [id, script] : compiledScripts_) {
-        auto result = script();
-        if (!result.valid()) {
-            sol::error err = result;
-            _debugPrint(("Error in '"+id+"': "+err.what()).c_str());
-        }
-    }
 
-    for (auto& [id, script] : compiledScripts_) {
+}
+
+void Loader::executeServerScripts() {
+    for (auto& [id, script] : serverScripts_) {
         auto modProxy = lua[id];
 
         if (modProxy.valid() && modProxy.get_type() == sol::type::table) {
@@ -117,9 +114,9 @@ void Loader::loadMods() {
             sol::protected_function mainFunc = modTable["main"];
 
             if (mainFunc.valid()) {
-                auto r = mainFunc();
-                if (!r.valid()) {
-                    sol::error err = r;
+                auto result = mainFunc();
+                if (!result.valid()) {
+                    sol::error err = result;
                     _debugPrint(("Error in '"+id+"': "+err.what()).c_str());
                 }
             } else {
@@ -131,54 +128,48 @@ void Loader::loadMods() {
     }
 }
 
-void Loader::collectMods() { //todo: remove possible mem leaks, i do not know how to memory manage :sunglasses:
+void Loader::collectMods() {
     //iterate through mods folder
     for (const auto & modEntry : fs::directory_iterator("mods/")) {
-        std::map<std::string, std::any> modTbl;
         nlohmann::json json = getManifest(modEntry.path()); //eat json data yummy :yum:
-        modTbl["modId"] = json["modId"].get<std::string>();
-        modTbl["name"] = json["name"].get<std::string>();
-        modTbl["version"] = json["version"].get<std::string>();
-        std::string modId = json["modId"].get<std::string>();
 
-        mods_[modEntry.path().filename().c_str()] = modTbl; //apply mod data into mod tbl
+        string modPath = modEntry.path().string();
 
-        std::string moduleFolder = modEntry.path().string() + "/module";
-        if (fs::exists(moduleFolder)) {
-            for (const auto & modFile : fs::directory_iterator(moduleFolder)) {
-                if (modFile.path().extension() == ".lua") {
-                    auto r = lua.load_file(modFile.path().string());
-
-                    if (r.valid()) {
-                        compiledScripts_[modId] = std::move(r);
-                    } else {
-                        sol::error err = r;
-                        _debugPrint("code bad: " + std::string(err.what()));
-                    }
-                }
-            }
+        if (json["modId"].is_null()) {
+            _debugPrint((modPath+" has no 'modId' please add one"));
+            continue;
         }
+        string modId = json["modId"].get<string>();
+
+        mods_[modId] = json;
     }
 }
 
-/* //incase global modloader is fucked
-int Loader::getModCount() { //dont touch internal variables as this should be used without creating new Loader.cpp
-    auto hasLuaFiles = false;
-    int modCount = 0;
+void Loader::refreshServerScripts() {
+    serverScripts_.clear();
 
-    for (const auto & modEntry : fs::directory_iterator("mods/")) {
-
-        std::string moduleFolder = modEntry.path().string() + "/module";
-        if (fs::exists(moduleFolder)) {
-            for (const auto & modFile : fs::directory_iterator(moduleFolder)) {
-                if (modFile.path().extension() == ".lua") {
-                    hasLuaFiles = true;
-                }
-            }
+    for (const auto & [modId, json] : mods_) {
+        if (json["serverMain"].is_null()) {
+            _debugPrint(("Mod "+modId+" has no 'serverMain' in its manifest.json"));
+            continue;
         }
-        if (hasLuaFiles) {
-            modCount += 1;
+        string serverMain = json["serverMain"];
+
+        string serverMainPath = "mods/"+modId+"/"+serverMain;
+        if (!fs::exists(serverMainPath)) {
+            _debugPrint(("Could not find file for "+serverMainPath+" for mod "+modId));
+            continue;
+        }
+        mainServerFiles_[modId] = serverMain;
+
+        auto result = lua.load_file(serverMainPath);
+
+        if (result.valid()) {
+            serverScripts_[modId] = std::move(result);
+            _debugPrint(modId+"'s '"+serverMain+"' has been loaded successfully");
+        } else {
+            sol::error err = result;
+            _debugPrint("code bad: " + string(err.what()));
         }
     }
-    return modCount;
-}*/
+}

@@ -15,12 +15,19 @@ class Loader {
 
         void registerFunctions();
         void collectMods();
+
+        void refreshServerScripts();
+
         static int getModCount();
         void loadMods();
 
+        void executeServerScripts();
+
         static void _debugPrint(std::string output);
 
-        std::map<std::string, std::map<std::string, std::any>> mods_;
+        std::map<std::string, nlohmann::json> mods_;
+
+        std::map<std::string, std::string> mainServerFiles_;
 
         sol::state lua;
     private:
@@ -33,7 +40,7 @@ class Loader {
         void test(std::string event, sol::function func);
 
 
-        std::map<std::string, sol::load_result> compiledScripts_;
+        std::map<std::string, sol::load_result> serverScripts_;
 };
 
 

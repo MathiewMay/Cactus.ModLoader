@@ -1,5 +1,6 @@
 {
   "name": "Example Mod",
   "version": "1.0.0",
-  "modId": "ExampleMod"
+  "modId": "ExampleMod",
+  "serverMain": "module/main.lua"
 }
