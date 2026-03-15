@@ -106,24 +106,17 @@ void Loader::loadMods() {
 }
 
 void Loader::executeServerScripts() {
-    for (auto& [id, script] : serverScripts_) {
-        auto modProxy = lua[id];
+    for (auto& [id, environment] : serverModEnvironments_) {
+        sol::protected_function mainFunc = environment["main"];
 
-        if (modProxy.valid() && modProxy.get_type() == sol::type::table) {
-            sol::table modTable = modProxy;
-            sol::protected_function mainFunc = modTable["main"];
-
-            if (mainFunc.valid()) {
-                auto result = mainFunc();
-                if (!result.valid()) {
-                    sol::error err = result;
-                    _debugPrint(("Error in '"+id+"': "+err.what()).c_str());
-                }
-            } else {
-                _debugPrint(("Mod "+id+" must have a 'main()' function in its global table, 'function "+id+".main()' is missing"));
+        if (mainFunc.valid()) {
+            auto result = mainFunc();
+            if (!result.valid()) {
+                sol::error err = result;
+                _debugPrint(("Error in '"+id+"': "+err.what()).c_str());
             }
         } else {
-            _debugPrint(("Mod "+id+" has no global table, '"+id+" = {}' is missing"));
+            _debugPrint(("Mod "+id+" must have a 'main()' function in its global table, 'function "+id+".main()' is missing"));
         }
     }
 }
@@ -146,14 +139,14 @@ void Loader::collectMods() {
 }
 
 void Loader::refreshServerScripts() {
-    serverScripts_.clear();
+    serverModEnvironments_.clear();
 
     for (const auto & [modId, json] : mods_) {
         if (json["serverMain"].is_null()) {
             _debugPrint(("Mod "+modId+" has no 'serverMain' in its manifest.json"));
             continue;
         }
-        string serverMain = json["serverMain"];
+        string serverMain = json["serverMain"].get<string>();
 
         string serverMainPath = "mods/"+modId+"/"+serverMain;
         if (!fs::exists(serverMainPath)) {
@@ -162,10 +155,11 @@ void Loader::refreshServerScripts() {
         }
         mainServerFiles_[modId] = serverMain;
 
-        auto result = lua.load_file(serverMainPath);
+        sol::environment modEnv(lua, sol::create, lua.globals());
+        auto result = lua.script_file(serverMainPath, modEnv);
 
         if (result.valid()) {
-            serverScripts_[modId] = std::move(result);
+            serverModEnvironments_[modId] = std::move(modEnv);
             _debugPrint(modId+"'s '"+serverMain+"' has been loaded successfully");
         } else {
             sol::error err = result;

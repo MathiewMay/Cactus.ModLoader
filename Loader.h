@@ -40,7 +40,7 @@ class Loader {
         void test(std::string event, sol::function func);
 
 
-        std::map<std::string, sol::load_result> serverScripts_;
+        std::map<std::string, sol::environment> serverModEnvironments_;
 };
 
 
