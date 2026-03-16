@@ -11,6 +11,8 @@
 #include <fstream>
 #include <utility>
 #include <string>
+
+#include "../Minecraft.World/Items/Item.h"
 #include "Common/EventSystem/EventHandler.h"
 
 namespace fs = std::filesystem;
@@ -23,6 +25,7 @@ Loader::Loader() {
         fs::create_directory("mods/");
     }
 
+    registerClientFunctions();
     registerServerFunctions();
     EventHandler::registerServerEvents(luaServer);
     app.DebugPrintf("Cactus ModLoader initialized!\n");
@@ -36,6 +39,12 @@ nlohmann::json Loader::getManifest(string filePath) {
     string fullPath = filePath + "/manifest.json";
     auto data = loadFile(fullPath);
     return nlohmann::json::parse(data);
+}
+
+void Loader::registerClientFunctions() {
+    luaClient.set_function("registerItem", [this](string texture) {
+        Item::items[256+900] = (new Item(24))->setTextureName(L"stick")->handEquipped()->setDescriptionId(IDS_ITEM_STICK)->setUseDescriptionId(IDS_DESC_STICK);
+    });
 }
 
 void Loader::registerServerFunctions() {

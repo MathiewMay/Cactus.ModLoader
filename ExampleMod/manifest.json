@@ -2,5 +2,6 @@
   "name": "Example Mod",
   "version": "1.0.0",
   "modId": "ExampleMod",
-  "serverMain": "module/main.lua"
+  "serverMain": "module/server.lua",
+  "clientMain": "module/client.lua"
 }

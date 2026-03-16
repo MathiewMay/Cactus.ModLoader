@@ -1,7 +1,7 @@
 #include "EventHandler.h"
 
-#include "Common/EventSystem/Events/Player/PlayerBlockBreakEvent.h"
-#include "Common/EventSystem/Events/Player/PlayerBlockPlaceEvent.h"
+#include "Events/Player/PlayerBlockBreakEvent.h"
+#include "Events/Player/PlayerBlockPlaceEvent.h"
 #include "../../Minecraft.Client/Player/ServerPlayerGameMode.h"
 #include "../../Minecraft.Client/Player/ServerPlayer.h"
 
@@ -23,12 +23,19 @@ void EventHandler::registerServerEvents(sol::state& lua) {
         "name", &CactusEvent::eventName
         );
 
+    lua.new_usertype<Inventory>("Inventory",
+        "setItem", [](Inventory& inv, const int slot, const int itemId) {
+            inv.setItem(slot, std::make_shared<ItemInstance>(itemId, 1, 0));
+        }
+    );
+
     lua.new_usertype<ServerPlayer>("ServerPlayer",
         "getGamemode", sol::property([](ServerPlayer& p) -> std::string {
             if (p.gameMode->isSurvival()) return "survival";
             if (p.gameMode->isCreative()) return "creative";
             return "unknown";
         }),
+        "inventory", &ServerPlayer::inventory,
         "sendMessage", [](ServerPlayer& p, const std::string& message) {
             p.sendMessage(std::wstring(message.begin(), message.end()));
         }

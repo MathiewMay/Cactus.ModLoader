@@ -12,15 +12,12 @@
 class Loader {
     public:
         Loader();
+        void collectMods();
 
         void registerServerFunctions();
-        void collectMods();
 
         void refreshServerScripts();
         void refreshClientScripts();
-
-        static int getModCount();
-        void loadMods();
 
         void executeServerScripts();
         void executeClientScripts();
@@ -39,10 +36,11 @@ class Loader {
 
         static nlohmann::json getManifest(std::string filePath);
 
+        void registerClientFunctions();
+
         static std::string loadFile(std::string fileName);
 
         void test(std::string event, sol::function func);
-
 
         std::map<std::string, sol::environment> serverModEnvironments_;
         std::map<std::string, sol::environment> clientModEnvironments_;

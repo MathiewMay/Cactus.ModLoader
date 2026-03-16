@@ -16,7 +16,7 @@ function ExampleMod.main()
 
 	registerEvent("PlayerBlockPlace", function(event)
 		if event.player.gamemode ~= "creative" then
-			event.player:sendMessage("You are not allowed to place block id "..event.blockId)
+			event.player:sendMessage("You are not allowed to place block id "..event.blockId.." located")
 			event:setCancelled(true)
 		end
 	end)
