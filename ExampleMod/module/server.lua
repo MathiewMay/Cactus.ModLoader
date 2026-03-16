@@ -7,7 +7,6 @@ function main()
 
 	registerEvent("PlayerBlockBreak", function(event)
 		if event.player.gamemode.isSurvival then
-            event.player:setGameMode(GameMode.CREATIVE)
 			event.player:sendMessage("You are not allowed to break block id "..event.blockId)
 			event:setCancelled(true)
 		end

@@ -8,6 +8,7 @@
 #include "Server/Events/Item/ItemInteractEvent.h"
 #include "Server/Events/Player/PlayerBlockBreakEvent.h"
 #include "Server/Events/Player/PlayerBlockPlaceEvent.h"
+#include "Server/Events/Player/PlayerConnectionEvent.h"
 
 void EventBindings::bindServerEvents(sol::state& lua) {
     lua.set_function("registerEvent",
@@ -43,6 +44,42 @@ void EventBindings::bindServerEvents(sol::state& lua) {
     lua["GameMode"]["ADVENTURE"] = 2;
 
     lua.new_usertype<ServerPlayer>("ServerPlayer",
+        "getAllowFlight", [](ServerPlayer& player) {
+            return player.isAllowedToFly();
+        },
+        "getViewDistance", [](ServerPlayer& player) {
+            return player.getViewDistance();
+        },
+        "getDisplayName", [](ServerPlayer& player) {
+            return player.getDisplayName();
+        },
+        "getExp",  [](ServerPlayer& player) {
+            return player.experienceProgress;
+        },
+        "getFlySpeed", [](ServerPlayer& player) {
+            return player.flyingSpeed;
+        },
+        "getLevel", [](ServerPlayer& player) {
+            return player.experienceLevel;
+        },
+        "getName", [](ServerPlayer& player) {
+            return player.getName();
+        },
+        "getWalkSpeed", [](ServerPlayer& player) {
+            return player.walkingSpeed;
+        },
+        "giveExp", [](ServerPlayer& player, float amount) {
+            player.experienceProgress += amount;
+        },
+        "giveExpLevels", [](ServerPlayer& player, int amount) {
+            player.experienceLevel += amount;
+        },
+        "setExp", [](ServerPlayer& player, float amount) {
+            player.experienceProgress = amount;
+        },
+        "setLevel", [](ServerPlayer& player, float amount) {
+            player.experienceLevel = amount;
+        },
         "gamemode", &ServerPlayer::gameMode,
         "inventory", &ServerPlayer::inventory,
         "setGameMode", [](ServerPlayer& player, int gameTypeId) {
@@ -76,6 +113,11 @@ void EventBindings::bindServerEvents(sol::state& lua) {
         "item", &ItemInteractEvent::item,
         "level", &ItemInteractEvent::level,
         "player", &ItemInteractEvent::player,
+        sol::base_classes, sol::bases<CactusEvent>()
+    );
+
+    lua.new_usertype<PlayerConnectionEvent>("PlayerConnectionEvent",
+        "player", &PlayerConnectionEvent::player,
         sol::base_classes, sol::bases<CactusEvent>()
     );
 }
