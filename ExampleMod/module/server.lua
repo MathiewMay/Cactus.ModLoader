@@ -1,6 +1,4 @@
-ExampleMod = {}
-
-function ExampleMod.main()
+function main()
 	log("Ran log function from script!")
 
 	number = 8
