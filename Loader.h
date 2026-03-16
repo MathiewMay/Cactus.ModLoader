@@ -18,7 +18,7 @@ class Loader {
         void registerServerFunctions();
 
 
-        void changeLang(StringTable m_stringTable);
+        void changeLang(StringTable &m_stringTable);
 
         void refreshServerScripts();
         void refreshClientScripts();

@@ -82,7 +82,7 @@ void Loader::registerClientFunctions() {
 }
 
 //PUT INTO Console_App.cpp AT loadStringTable() AND MAKE SURE StringTable HAS A AddData METHOD!!!
-void Loader::changeLang(StringTable m_stringTable) {
+void Loader::changeLang(StringTable& m_stringTable) {
     using convert_type = std::codecvt_utf8<wchar_t>;
     std::wstring_convert<convert_type, wchar_t> converter;
 
