@@ -20,8 +20,4 @@ function main()
 			event:setCancelled(true)
 		end
 	end)
-
-	registerEvent("ItemInteractEvent", function(event)
-	    event.player:sendMessage("interact")
-	end)
 end

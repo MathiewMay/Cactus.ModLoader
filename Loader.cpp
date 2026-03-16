@@ -13,7 +13,7 @@
 #include <string>
 
 #include "../Minecraft.World/Items/Item.h"
-#include "Common/EventSystem/EventHandler.h"
+#include "Common/EventSystem/EventBindings.h"
 
 namespace fs = std::filesystem;
 
@@ -27,7 +27,7 @@ Loader::Loader() {
 
     registerClientFunctions();
     registerServerFunctions();
-    EventHandler::registerServerEvents(luaServer);
+    EventBindings::bindServerEvents(luaServer);
     app.DebugPrintf("Cactus ModLoader initialized!\n");
 }
 

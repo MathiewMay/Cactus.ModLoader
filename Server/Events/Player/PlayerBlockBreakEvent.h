@@ -1,7 +1,7 @@
 #pragma once
 
-#include "../../CactusEvent.h"
-#include "../../../Minecraft.Client/Player/ServerPlayer.h"
+#include "../../../Common/EventSystem/CactusEvent.h"
+#include "../../../../Minecraft.Client/Player/ServerPlayer.h"
 
 struct PlayerBlockBreakEvent final : public CancellableCactusEvent {
     ServerPlayer* player;

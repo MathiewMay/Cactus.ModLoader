@@ -1,7 +1,6 @@
 #pragma once
 
 #include <string>
-#include "../../includes/sol/sol.hpp"
 
 struct CactusEvent {
     std::string eventName;

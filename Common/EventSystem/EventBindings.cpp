@@ -1,14 +1,14 @@
-#include "EventHandler.h"
+#include "EventBindings.h"
 
-#include "Events/Player/PlayerBlockBreakEvent.h"
-#include "Events/Player/PlayerBlockPlaceEvent.h"
-#include "../../Minecraft.Client/Player/ServerPlayerGameMode.h"
-#include "../../Minecraft.Client/Player/ServerPlayer.h"
-#include "Common/EventSystem/Events/Item/ItemInteractEvent.h"
+#include "../Minecraft.Client/Player/ServerPlayerGameMode.h"
+#include "../Minecraft.Client/Player/ServerPlayer.h"
 
-// todo: maybe rename class? this isnt really a event handler
+/* Server Includes */
+#include "Server/Events/Item/ItemInteractEvent.h"
+#include "Server/Events/Player/PlayerBlockBreakEvent.h"
+#include "Server/Events/Player/PlayerBlockPlaceEvent.h"
 
-void EventHandler::registerServerEvents(sol::state& lua) {
+void EventBindings::bindServerEvents(sol::state& lua) {
     lua.set_function("registerEvent",
         [](const std::string& event_name, sol::function callback) {
             EventBus::Get().registerListener(event_name, sol::protected_function(std::move(callback)));
