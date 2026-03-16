@@ -7,7 +7,7 @@
 
 //todo: maybe rename class? this isnt really a event handler
 
-void EventHandler::bindEvents(sol::state& lua) {
+void EventHandler::registerServerEvents(sol::state& lua) {
     lua.set_function("registerEvent",
         [](const std::string& event_name, sol::function callback) {
             EventBus::Get().registerListener(event_name, sol::protected_function(std::move(callback)));

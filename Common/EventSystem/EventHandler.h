@@ -3,5 +3,5 @@
 
 class EventHandler {
     public:
-        static void bindEvents(sol::state& lua);
+        static void registerServerEvents(sol::state& lua);
 };

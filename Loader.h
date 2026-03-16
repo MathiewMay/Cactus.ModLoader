@@ -13,23 +13,27 @@ class Loader {
     public:
         Loader();
 
-        void registerFunctions();
+        void registerServerFunctions();
         void collectMods();
 
         void refreshServerScripts();
+        void refreshClientScripts();
 
         static int getModCount();
         void loadMods();
 
         void executeServerScripts();
+        void executeClientScripts();
 
         static void _debugPrint(std::string output);
 
         std::map<std::string, nlohmann::json> mods_;
 
         std::map<std::string, std::string> mainServerFiles_;
+        std::map<std::string, std::string> mainClientFiles_;
 
-        sol::state lua;
+        sol::state luaServer;
+        sol::state luaClient;
     private:
         static void log(std::string message);
 
@@ -41,6 +45,7 @@ class Loader {
 
 
         std::map<std::string, sol::environment> serverModEnvironments_;
+        std::map<std::string, sol::environment> clientModEnvironments_;
 };
 
 
