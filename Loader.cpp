@@ -41,10 +41,62 @@ nlohmann::json Loader::getManifest(string filePath) {
     return nlohmann::json::parse(data);
 }
 
+std::vector<std::string> langList(2000); //increase if needed
+
+int itemNameIdMax = 1937;
+int itemIdMax = 406;
+
+int nextItemNameId() {
+    itemNameIdMax += 1;
+    return itemNameIdMax;
+}
+
+int nextItemId() {
+    itemIdMax += 1;
+    return itemIdMax;
+}
+
 void Loader::registerClientFunctions() {
-    luaClient.set_function("registerItem", [this](string texture) {
-        Item::items[256+900] = (new Item(24))->setTextureName(L"stick")->handEquipped()->setDescriptionId(IDS_ITEM_STICK)->setUseDescriptionId(IDS_DESC_STICK);
+    luaClient.set_function("registerItem", [this](string name) {
+        int itemNameId = nextItemNameId();
+        int itemId = nextItemId();
+        Item::items[itemId] = (new Item(itemId))->setTextureName(L"stick")->handEquipped()->setDescriptionId(itemNameId)->setUseDescriptionId(IDS_DESC_STICK); // im SO close to getting name working.. unsure whats wrong.
+        langList[itemNameId] = name;
+        return itemId;
     });
+
+    luaClient.set_function("log", [this](string message) {
+        this->log(message);
+    });
+
+    // luaClient.set_function("getString", [this](string name) {
+    //     std::vector<std::wstring> why;
+    //     const char* text = name.c_str();
+    //     std::wstring wtext = std::wstring(text, text + strlen(text));
+    //     why.push_back(wtext); //can we literally kill 4jstudios WHY ARE WE USING WSTRING DIEEEEEE KILLLLLLLLL
+    //     app.m_stringTable.
+    //     return app.getLocale(why);
+    // });
+
+    //app.m_stringTable->addData(L"IDS_ITEM_STICK", L"im gonna kill you 4jstudios.");
+}
+
+//PUT INTO Console_App.cpp AT loadStringTable() AND MAKE SURE StringTable HAS A AddData METHOD!!!
+void Loader::changeLang(StringTable m_stringTable) {
+    using convert_type = std::codecvt_utf8<wchar_t>;
+    std::wstring_convert<convert_type, wchar_t> converter;
+
+    for (size_t i = 0; i < langList.size(); i++) {
+        if (langList[i].empty()) continue;
+
+        const char* text = langList[i].c_str();
+        std::wstring wtext = std::wstring(text, text + strlen(text));
+        m_stringTable.addData(i, wtext);
+        app.DebugPrintf("[Lua] ");
+        app.DebugPrintf(to_string(i).c_str());
+        app.DebugPrintf(" is the id for: \n");
+        app.DebugPrintf(("[Lua] "+converter.to_bytes(m_stringTable.getString(i))+"\n").c_str());
+    }
 }
 
 void Loader::registerServerFunctions() {
@@ -89,6 +141,7 @@ void Loader::registerServerFunctions() {
     luaServer.new_usertype<MinecraftServer>("MinecraftServer",
         "getCommandDispatcher", &MinecraftServer::getCommandDispatcher
     );
+
     luaServer.new_usertype<ServerLevel>("ServerLevel",
         "getBlocksAndData", &ServerLevel::getBlocksAndData,
         "setBlocksAndData", &ServerLevel::setBlocksAndData,

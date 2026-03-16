@@ -1,6 +1,4 @@
-ExampleMod = {}
-
-function ExampleMod.main()
+function main()
 	log("Ran log function from script!")
 
 	number = 8
@@ -9,6 +7,8 @@ function ExampleMod.main()
 
 	registerEvent("PlayerBlockBreak", function(event)
 		if event.player.gamemode ~= "creative" then
+			event.player.inventory:setItem(0, 407)
+			event.player.inventory:setItem(1, 408)
 			event.player:sendMessage("You are not allowed to break block id "..event.blockId)
 			event:setCancelled(true)
 		end

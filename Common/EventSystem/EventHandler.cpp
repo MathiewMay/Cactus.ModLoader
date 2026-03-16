@@ -4,8 +4,9 @@
 #include "Events/Player/PlayerBlockPlaceEvent.h"
 #include "../../Minecraft.Client/Player/ServerPlayerGameMode.h"
 #include "../../Minecraft.Client/Player/ServerPlayer.h"
+#include "Common/EventSystem/Events/Item/ItemInteractEvent.h"
 
-//todo: maybe rename class? this isnt really a event handler
+// todo: maybe rename class? this isnt really a event handler
 
 void EventHandler::registerServerEvents(sol::state& lua) {
     lua.set_function("registerEvent",
@@ -56,6 +57,13 @@ void EventHandler::registerServerEvents(sol::state& lua) {
         "y", &PlayerBlockPlaceEvent::y,
         "z", &PlayerBlockPlaceEvent::z,
         "blockId", &PlayerBlockPlaceEvent::blockId,
-    sol::base_classes, sol::bases<CancellableCactusEvent, CactusEvent>()
-);
+        sol::base_classes, sol::bases<CancellableCactusEvent, CactusEvent>()
+    );
+
+    lua.new_usertype<ItemInteractEvent>("ItemInteractEvent",
+        "item", &ItemInteractEvent::item,
+        "level", &ItemInteractEvent::level,
+        "player", &ItemInteractEvent::player,
+        sol::base_classes, sol::bases<CactusEvent>()
+    );
 }
