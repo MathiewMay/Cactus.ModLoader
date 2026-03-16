@@ -1,2 +1,2 @@
 # Cactus-ModLoader
-A Fork-Agnostic LCE Mod Loader.
+A fork-agnostic and cross-platform Mod Loader for LCE.
