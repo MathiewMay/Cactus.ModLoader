@@ -21,9 +21,11 @@ class Loader {
         void changeLang(StringTable &m_stringTable);
 
         void refreshServerScripts();
+        void refreshCommonScripts();
         void refreshClientScripts();
 
         void executeServerScripts();
+        void executeCommonScripts();
         void executeClientScripts();
 
         static void _debugPrint(std::string output);
@@ -32,14 +34,17 @@ class Loader {
 
         std::map<std::string, std::string> mainServerFiles_;
         std::map<std::string, std::string> mainClientFiles_;
+        std::map<std::string, std::string> mainCommonFiles_;
 
         sol::state luaServer;
         sol::state luaClient;
+        sol::state luaCommon;
     private:
         static void log(std::string message);
 
         static nlohmann::json getManifest(std::string filePath);
 
+        void registerCommonFunctions();
         void registerClientFunctions();
 
         static std::string loadFile(std::string fileName);
@@ -48,6 +53,7 @@ class Loader {
 
         std::map<std::string, sol::environment> serverModEnvironments_;
         std::map<std::string, sol::environment> clientModEnvironments_;
+        std::map<std::string, sol::environment> commonModEnvironments_;
 };
 
 

@@ -3,5 +3,6 @@
   "version": "1.0.0",
   "modId": "ExampleMod",
   "serverMain": "module/server.lua",
-  "clientMain": "module/client.lua"
+  "clientMain": "module/client.lua",
+  "commonMain": "module/common.lua"
 }

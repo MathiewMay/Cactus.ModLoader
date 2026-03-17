@@ -20,6 +20,7 @@ namespace fs = std::filesystem;
 Loader::Loader() {
     luaServer.open_libraries(sol::lib::base, sol::lib::string, sol::lib::table);
     luaClient.open_libraries(sol::lib::base, sol::lib::string, sol::lib::table);
+    luaCommon.open_libraries(sol::lib::base, sol::lib::string, sol::lib::table);
 
     if (!fs::exists("mods")) {
         fs::create_directory("mods/");
@@ -27,6 +28,7 @@ Loader::Loader() {
 
     registerClientFunctions();
     registerServerFunctions();
+    registerCommonFunctions();
     EventBindings::bindServerEvents(luaServer);
     app.DebugPrintf("Cactus ModLoader initialized!\n");
 }
@@ -56,8 +58,8 @@ int nextItemId() {
     return itemIdMax;
 }
 
-void Loader::registerClientFunctions() {
-    luaClient.set_function("registerItem", [this](string name) {
+void Loader::registerCommonFunctions() {
+    luaCommon.set_function("registerItem", [this](string name) {
         int itemNameId = nextItemNameId();
         int itemId = nextItemId();
         Item::items[itemId] = (new Item(itemId))->setTextureName(L"stick")->handEquipped()->setDescriptionId(itemNameId)->setUseDescriptionId(IDS_DESC_STICK); // im SO close to getting name working.. unsure whats wrong.
@@ -65,20 +67,13 @@ void Loader::registerClientFunctions() {
         return itemId;
     });
 
-    luaClient.set_function("log", [this](string message) {
+    luaCommon.set_function("log", [this](string message) {
         this->log(message);
     });
+}
 
-    // luaClient.set_function("getString", [this](string name) {
-    //     std::vector<std::wstring> why;
-    //     const char* text = name.c_str();
-    //     std::wstring wtext = std::wstring(text, text + strlen(text));
-    //     why.push_back(wtext); //can we literally kill 4jstudios WHY ARE WE USING WSTRING DIEEEEEE KILLLLLLLLL
-    //     app.m_stringTable.
-    //     return app.getLocale(why);
-    // });
+void Loader::registerClientFunctions() {
 
-    //app.m_stringTable->addData(L"IDS_ITEM_STICK", L"im gonna kill you 4jstudios.");
 }
 
 //PUT INTO Console_App.cpp AT loadStringTable() AND MAKE SURE StringTable HAS A AddData METHOD!!!
@@ -181,6 +176,36 @@ void Loader::collectMods() {
     }
 }
 
+void Loader::refreshCommonScripts() {
+    commonModEnvironments_.clear();
+
+    for (const auto & [modId, json] : mods_) {
+        if (!json.contains("commonMain") || json["commonMain"].is_null()) {
+            _debugPrint(("Mod "+modId+" has no 'commonMain' in its manifest.json skipping."));
+            continue;
+        }
+        string commonMain = json["commonMain"].get<string>();
+
+        string commonMainPath = "mods/"+modId+"/"+commonMain;
+        if (!fs::exists(commonMainPath)) {
+            _debugPrint(("Could not find file for "+commonMainPath+" for mod "+modId));
+            continue;
+        }
+        mainCommonFiles_[modId] = commonMain;
+
+        sol::environment modEnv(luaCommon, sol::create, luaCommon.globals());
+        auto result = luaCommon.script_file(commonMainPath, modEnv);
+
+        if (result.valid()) {
+            commonModEnvironments_[modId] = std::move(modEnv);
+            _debugPrint(modId+"'s '"+commonMain+"' has been loaded successfully");
+        } else {
+            sol::error err = result;
+            _debugPrint("code bad: " + string(err.what()));
+        }
+    }
+}
+
 void Loader::refreshServerScripts() {
     serverModEnvironments_.clear();
 
@@ -243,6 +268,22 @@ void Loader::refreshClientScripts() {
 
 void Loader::executeServerScripts() {
     for (auto& [id, environment] : serverModEnvironments_) {
+        sol::protected_function mainFunc = environment["main"];
+
+        if (mainFunc.valid()) {
+            auto result = mainFunc();
+            if (!result.valid()) {
+                sol::error err = result;
+                _debugPrint(("Error in '"+id+"': "+err.what()).c_str());
+            }
+        } else {
+            _debugPrint(("Mod "+id+" must have a 'main()' function in its global table, 'function "+id+".main()' is missing"));
+        }
+    }
+}
+
+void Loader::executeCommonScripts() {
+    for (auto& [id, environment] : commonModEnvironments_) {
         sol::protected_function mainFunc = environment["main"];
 
         if (mainFunc.valid()) {
