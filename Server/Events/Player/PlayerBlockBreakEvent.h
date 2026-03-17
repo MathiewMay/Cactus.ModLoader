@@ -1,7 +1,7 @@
 #pragma once
 
-#include "../../CactusEvent.h"
-#include "../../../Minecraft.Client/Player/ServerPlayer.h"
+#include "../../../Common/EventSystem/CactusEvent.h"
+#include "../../../../Minecraft.Client/Player/ServerPlayer.h"
 
 struct PlayerBlockBreakEvent final : public CancellableCactusEvent {
     ServerPlayer* player;
@@ -10,6 +10,6 @@ struct PlayerBlockBreakEvent final : public CancellableCactusEvent {
 
     /* CactusModLoader [IMPL-AT] (Minecraft.Client/Network/PlayerConnection.cpp) */
     PlayerBlockBreakEvent(ServerPlayer* player, int x, int y, int z, int blockId) : player(player), x(x), y(y), z(z), blockId(blockId) {
-        eventName = "PlayerBlockBreak";
+        eventName = "PlayerBlockBreakEvent";
     }
 };

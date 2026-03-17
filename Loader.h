@@ -6,6 +6,7 @@
 #define INC_4JCRAFT_LOADER_H
 
 #include "Common/EventSystem/EventBus.h"
+#include "../../Minecraft.Client/Utils/StringTable.h"
 #include "includes/sol/sol.hpp"
 #include "includes/json/json.hpp"
 
@@ -15,6 +16,9 @@ class Loader {
         void collectMods();
 
         void registerServerFunctions();
+
+
+        void changeLang(StringTable &m_stringTable);
 
         void refreshServerScripts();
         void refreshClientScripts();
