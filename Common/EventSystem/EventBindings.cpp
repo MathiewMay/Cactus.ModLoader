@@ -10,26 +10,37 @@
 #include "Server/Events/Player/PlayerBlockPlaceEvent.h"
 #include "Server/Events/Player/PlayerConnectionEvent.h"
 #include "Server/Events/Player/PlayerJoinEvent.h"
+#include "EventBus.h"
 
 void EventBindings::bindServerEvents(sol::state& lua) {
     lua.set_function("registerEvent",
         [](const std::string& event_name, sol::function callback) {
             EventBus::Get().registerListener(event_name, sol::protected_function(std::move(callback)));
-        });
+        }
+    );
 
     lua.new_usertype<CancellableCactusEvent>("CancellableCactusEvent",
         "setCancelled", &CancellableCactusEvent::setCancelled,
         "isCancelled", &CancellableCactusEvent::isCancelled,
         sol::base_classes, sol::bases<CactusEvent>()
-        );
+    );
 
     lua.new_usertype<CactusEvent>("CactusEvent",
         "name", &CactusEvent::eventName
-        );
+    );
 
     lua.new_usertype<Inventory>("Inventory",
         "setItem", [](Inventory& inv, const int slot, const int itemId) {
             inv.setItem(slot, std::make_shared<ItemInstance>(itemId, 1, 0));
+        },
+        "getItem", [](Inventory& inv, const int slot) {
+            return inv.getItem(slot);
+        }
+    );
+
+    lua.new_usertype<ItemInstance>("ItemInstance",
+        "getHoverName", [](ItemInstance& item) {
+            return item.getHoverName();
         }
     );
 
