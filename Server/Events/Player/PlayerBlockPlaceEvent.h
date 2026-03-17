@@ -8,7 +8,7 @@ struct PlayerBlockPlaceEvent final : public CancellableCactusEvent {
     int x, y, z;
     int blockId;
 
-    /* CactusModLoader [IMPL-AT] (Minecraft.World/Items/TileItems/TileItem.cpp) */
+    /* CactusModLoader [IMPL-AT] (Minecraft.Client/Network/PlayerConnection.cpp) */
     PlayerBlockPlaceEvent(ServerPlayer* player, int x, int y, int z, int blockId) : player(player), x(x), y(y), z(z), blockId(blockId) {
         eventName = "PlayerBlockPlaceEvent";
     }

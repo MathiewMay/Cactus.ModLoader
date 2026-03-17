@@ -10,12 +10,14 @@
 #include "includes/sol/sol.hpp"
 #include "includes/json/json.hpp"
 
+class MinecraftServer;
+
 class Loader {
     public:
         Loader();
         void collectMods();
 
-        void registerServerFunctions();
+        void registerServerFunctions(MinecraftServer* server);
 
 
         void changeLang(StringTable &m_stringTable);

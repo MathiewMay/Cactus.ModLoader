@@ -1,11 +1,13 @@
 #include "Loader.h"
 
-#include "../Minecraft.Client/MinecraftServer.h"
 #include "../Minecraft.World/Commands/CommandDispatcher.h"
 #include "../Minecraft.World/Level/Level.h"
 #include "../Minecraft.World/Level/LevelChunk.h"
 #include "../Minecraft.World/Player/Player.h"
 #include "../Minecraft.Client/Level/ServerLevel.h"
+#include "../Minecraft.Client/Player/ServerPlayer.h"
+#include "../Minecraft.Client/Network/PlayerList.h"
+#include "../Minecraft.Client/MinecraftServer.h"
 
 #include <filesystem>
 #include <fstream>
@@ -14,6 +16,8 @@
 
 #include "../Minecraft.World/Items/Item.h"
 #include "Common/EventSystem/EventBindings.h"
+
+class MinecraftServer;
 
 namespace fs = std::filesystem;
 
@@ -26,7 +30,6 @@ Loader::Loader() {
     }
 
     registerClientFunctions();
-    registerServerFunctions();
     EventBindings::bindServerEvents(luaServer);
     app.DebugPrintf("Cactus ModLoader initialized!\n");
 }
@@ -68,20 +71,8 @@ void Loader::registerClientFunctions() {
     luaClient.set_function("log", [this](string message) {
         this->log(message);
     });
-
-    // luaClient.set_function("getString", [this](string name) {
-    //     std::vector<std::wstring> why;
-    //     const char* text = name.c_str();
-    //     std::wstring wtext = std::wstring(text, text + strlen(text));
-    //     why.push_back(wtext); //can we literally kill 4jstudios WHY ARE WE USING WSTRING DIEEEEEE KILLLLLLLLL
-    //     app.m_stringTable.
-    //     return app.getLocale(why);
-    // });
-
-    //app.m_stringTable->addData(L"IDS_ITEM_STICK", L"im gonna kill you 4jstudios.");
 }
 
-//PUT INTO Console_App.cpp AT loadStringTable() AND MAKE SURE StringTable HAS A AddData METHOD!!!
 void Loader::changeLang(StringTable& m_stringTable) {
     using convert_type = std::codecvt_utf8<wchar_t>;
     std::wstring_convert<convert_type, wchar_t> converter;
@@ -99,7 +90,16 @@ void Loader::changeLang(StringTable& m_stringTable) {
     }
 }
 
-void Loader::registerServerFunctions() {
+void Loader::registerServerFunctions(MinecraftServer* server) {
+    luaServer["server"] = server;
+
+    luaServer.new_usertype<MinecraftServer>("MinecraftServer",
+        "getCommandDispatcher", &MinecraftServer::getCommandDispatcher,
+        "getPlayers", [](MinecraftServer* server) -> std::vector<std::shared_ptr<ServerPlayer>>& {
+            return server->getPlayers()->players;
+        }
+    );
+
     luaServer.set_function("log", [this](string message) {
         this->log(message);
     });
@@ -136,10 +136,6 @@ void Loader::registerServerFunctions() {
             {"Time", EGameCommand::eGameCommand_Time},
             {"ToggleDownfall", EGameCommand::eGameCommand_ToggleDownfall}
         }
-    );
-
-    luaServer.new_usertype<MinecraftServer>("MinecraftServer",
-        "getCommandDispatcher", &MinecraftServer::getCommandDispatcher
     );
 
     luaServer.new_usertype<ServerLevel>("ServerLevel",
@@ -194,6 +190,7 @@ void Loader::refreshServerScripts() {
         string serverMainPath = "mods/"+modId+"/"+serverMain;
         if (!fs::exists(serverMainPath)) {
             _debugPrint(("Could not find file for "+serverMainPath+" for mod "+modId));
+
             continue;
         }
         mainServerFiles_[modId] = serverMain;
