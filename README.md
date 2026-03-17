@@ -44,9 +44,15 @@ vcpkg install lua:x64-windows
 
 
 # Implementing and building
-Cactus ModLoader is made to be fork-agnostic so that it could be implemented into any fork of LCE (LCEMP, MinecraftConsoles, 4jcraft etc...)
+Cactus ModLoader is made to be fork-agnostic so that it could be implemented into any fork of LCE
+Example: LCEMP, MinecraftConsoles, 4jcraft and others?
+
+You are responsible for maintaining a custom implementation of Cactus ModLoader on a LCE fork while respecting the contribution policy of the project
+
+The project comes with a meson.build file that can be added as a dependency for the Minecraft.Client
+
 I am currently working on a implementation of Cactus ModLoader for 4jcraft while developing and expending the mod loader
-You can contribute to it on the [cml-implementation](https://github.com/MathiewMay/4jcraft-mmay/tree/feat/cml-implementation) branch of my 4jcraft fork
+you can contribute to it on the [cml-implementation](https://github.com/MathiewMay/4jcraft-mmay/tree/feat/cml-implementation) branch of my 4jcraft-mmay fork
 
 # Contribution policy
 Submitting code to this repository authored by generative AI tools (LLMs, agentic coding tools, etc...) is strictly forbidden
