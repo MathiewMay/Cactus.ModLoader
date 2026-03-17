@@ -1,6 +1,8 @@
 # Cactus-ModLoader
 A fork-agnostic and cross-platform Mod Loader for LCE.
 
+Cactus ModLoader allows you to mod LCE using lua scripting.
+
 Join the discord
 https://discord.gg/YFdVHmUvdm
 
