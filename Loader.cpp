@@ -22,8 +22,8 @@ class MinecraftServer;
 namespace fs = std::filesystem;
 
 Loader::Loader() {
-    luaServer.open_libraries(sol::lib::base, sol::lib::string, sol::lib::table);
-    luaClient.open_libraries(sol::lib::base, sol::lib::string, sol::lib::table);
+    luaServer.open_libraries(sol::lib::base, sol::lib::string, sol::lib::table, sol::lib::package);
+    luaClient.open_libraries(sol::lib::base, sol::lib::string, sol::lib::table, sol::lib::package);
 
     if (!fs::exists("mods")) {
         fs::create_directory("mods/");
@@ -195,6 +195,10 @@ void Loader::refreshServerScripts() {
         }
         mainServerFiles_[modId] = serverMain;
 
+        string currentPath = luaServer["package"]["path"];
+        string newPath = "mods/"+modId+"/?.lua;"+currentPath;
+        luaServer["package"]["path"] = newPath;
+        
         sol::environment modEnv(luaServer, sol::create, luaServer.globals());
         auto result = luaServer.script_file(serverMainPath, modEnv);
 
