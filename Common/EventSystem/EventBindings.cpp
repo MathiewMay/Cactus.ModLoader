@@ -9,6 +9,7 @@
 #include "Server/Events/Player/PlayerBlockBreakEvent.h"
 #include "Server/Events/Player/PlayerBlockPlaceEvent.h"
 #include "Server/Events/Player/PlayerConnectionEvent.h"
+#include "Server/Events/Player/PlayerJoinEvent.h"
 
 void EventBindings::bindServerEvents(sol::state& lua) {
     lua.set_function("registerEvent",
@@ -44,30 +45,16 @@ void EventBindings::bindServerEvents(sol::state& lua) {
     lua["GameMode"]["ADVENTURE"] = 2;
 
     lua.new_usertype<ServerPlayer>("ServerPlayer",
-        "getAllowFlight", [](ServerPlayer& player) {
-            return player.isAllowedToFly();
-        },
+        "canFly", &ServerPlayer::isAllowedToFly,
         "getViewDistance", [](ServerPlayer& player) {
             return player.getViewDistance();
         },
-        "getDisplayName", [](ServerPlayer& player) {
-            return player.getDisplayName();
-        },
-        "getExp",  [](ServerPlayer& player) {
-            return player.experienceProgress;
-        },
-        "getFlySpeed", [](ServerPlayer& player) {
-            return player.flyingSpeed;
-        },
-        "getLevel", [](ServerPlayer& player) {
-            return player.experienceLevel;
-        },
-        "getName", [](ServerPlayer& player) {
-            return player.getName();
-        },
-        "getWalkSpeed", [](ServerPlayer& player) {
-            return player.walkingSpeed;
-        },
+        "displayName", &ServerPlayer::displayName,
+        "experience",  &ServerPlayer::experienceProgress,
+        "flySpeed", &ServerPlayer::flyingSpeed,
+        "level", &ServerPlayer::experienceLevel,
+        "name", &ServerPlayer::name,
+        "walkSpeed", &ServerPlayer::walkingSpeed,
         "giveExp", [](ServerPlayer& player, float amount) {
             player.experienceProgress += amount;
         },
@@ -86,8 +73,8 @@ void EventBindings::bindServerEvents(sol::state& lua) {
             GameType* type = GameType::byId(gameTypeId);
             if (type) player.setGameMode(type);
         },
-        "sendMessage", [](ServerPlayer& p, const std::string& message) {
-            p.sendMessage(std::wstring(message.begin(), message.end()));
+        "sendMessage", [](ServerPlayer& p, const std::wstring& message) {
+            p.sendMessage(message);
         }
     );
 
@@ -118,6 +105,11 @@ void EventBindings::bindServerEvents(sol::state& lua) {
 
     lua.new_usertype<PlayerConnectionEvent>("PlayerConnectionEvent",
         "player", &PlayerConnectionEvent::player,
+        sol::base_classes, sol::bases<CactusEvent>()
+    );
+
+    lua.new_usertype<PlayerJoinEvent>("PlayerJoinEvent",
+        "player", &PlayerJoinEvent::player,
         sol::base_classes, sol::bases<CactusEvent>()
     );
 }
