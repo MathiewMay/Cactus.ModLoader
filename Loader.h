@@ -1,12 +1,17 @@
 #pragma once
 
 #include "Common/EventSystem/EventBus.h"
+#include "CactusMod.h"
+
 #include "includes/sol/sol.hpp"
 #include "includes/json/json.hpp"
 
 class MinecraftServer;
 
+
+constexpr const char* requiredMetadata[] = {"modId","version","name","serverMain","clientMain"};
 class Loader {
+
 public:
     Loader();
     void collectMods();
@@ -14,6 +19,9 @@ public:
     void registerServerFunctions(MinecraftServer* server);
 
     static void log(const std::string &message);
+
+    void refresh(sol::state& luaState,std::string_view (CactusMod::*getEntry)() const,bool prependPath = false);
+    void execute(sol::environment& (CactusMod::*getEnv)());
 
     void refreshServerScripts();
     void refreshClientScripts();
@@ -23,18 +31,12 @@ public:
 
     static void _debugPrint(std::string output);
 
-    std::map<std::string, nlohmann::json> mods_;
 
-    std::map<std::string, std::string> mainServerFiles_;
-    std::map<std::string, std::string> mainClientFiles_;
+    std::map<std::string_view, CactusMod> mods_;
 
     sol::state luaServer;
     sol::state luaClient;
 private:
     static nlohmann::json getManifest(std::string filePath);
-
     static std::string loadFile(std::string fileName);
-
-    std::map<std::string, sol::environment> serverModEnvironments_;
-    std::map<std::string, sol::environment> clientModEnvironments_;
 };
