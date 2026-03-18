@@ -8,6 +8,7 @@
 #include "../Minecraft.World/Level/Storage/LevelSettings.h"
 #include "../Minecraft.World/Commands/CommandDispatcher.h"
 #include "../Minecraft.World/Level/Level.h"
+#include "../Minecraft.Client/Network/PlayerConnection.h"
 
 /* Server Includes */
 #include "Level/ServerLevel.h"
@@ -17,6 +18,9 @@
 #include "Server/Events/Player/PlayerBlockPlaceEvent.h"
 #include "Server/Events/Player/PlayerConnectionEvent.h"
 #include "Server/Events/Player/PlayerJoinEvent.h"
+
+#include "Server/Events/Player/PlayerFlightStartedEvent.h"
+#include "Server/Events/Player/PlayerFlightEndedEvent.h"
 
 void LuaBindings::bindCommonFunctions(const std::vector<sol::state*> &luaStates) {
     for (sol::state* lua : luaStates) {
@@ -70,7 +74,41 @@ void LuaBindings::bindServerEvents(sol::state& lua) {
     lua["GameMode"]["ADVENTURE"] = 2;
 
     lua.new_usertype<ServerPlayer>("ServerPlayer",
-        "canFly", &ServerPlayer::isAllowedToFly,
+        "setFoodLevel", [](ServerPlayer& player, int food) {
+            player.getFoodData()->setFoodLevel(food);
+        },
+        "feed", [](ServerPlayer& player, int food, double modifier) {
+            player.getFoodData()->eat(food,modifier);
+        },
+        "getHealth", [](ServerPlayer& player) {
+            return player.getHealth();
+        },
+        "setHealth", [](ServerPlayer& player, int health) {
+            player.setHealth(health);
+        },
+        "teleport", [](ServerPlayer& player, double x, double y, double z) {
+            player.teleportTo(x,y,z);
+        },
+        "setCanFly", [](ServerPlayer& player, bool toggle) {
+            // Toggles the PERMISSION to fly
+            unsigned int val = toggle == true ? 1 : 0;
+            player.setPlayerGamePrivilege(Player::EPlayerGamePrivileges::ePlayerGamePrivilege_CanFly,val);
+            player.abilities.mayfly = toggle;
+            std::shared_ptr<PlayerAbilitiesPacket> pkt =
+                std::make_shared<PlayerAbilitiesPacket>(&player.abilities);
+            player.connection->send(pkt);
+        },
+        "setFly", [](ServerPlayer& player, bool toggle) {
+            // Toggles the flight state (must implicitly toggle the permission if starting flight aswell!)
+            if (toggle) player.abilities.mayfly = toggle; // If we are disabling flight; do not remove toggle. That is the job of toggleFlightAllowed
+            player.abilities.flying = toggle;
+            std::shared_ptr<PlayerAbilitiesPacket> pkt =
+                std::make_shared<PlayerAbilitiesPacket>(&player.abilities);
+            player.connection->send(pkt);
+        },
+        "canFly", [](ServerPlayer& player) {
+            return player.abilities.mayfly;
+        },
         "getViewDistance", [](ServerPlayer& player) {
             return player.getViewDistance();
         },
@@ -134,6 +172,16 @@ void LuaBindings::bindServerEvents(sol::state& lua) {
 
     lua.new_usertype<PlayerJoinEvent>("PlayerJoinEvent",
         "player", &PlayerJoinEvent::player,
+        sol::base_classes, sol::bases<CactusEvent>()
+    );
+
+    lua.new_usertype<PlayerFlightStartedEvent>("PlayerFlightStartedEvent",
+        "player", &PlayerFlightStartedEvent::player,
+        sol::base_classes, sol::bases<CactusEvent>()
+    );
+
+    lua.new_usertype<PlayerFlightEndedEvent>("PlayerFlightEndedEvent",
+        "player", &PlayerFlightEndedEvent::player,
         sol::base_classes, sol::bases<CactusEvent>()
     );
 }
