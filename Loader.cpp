@@ -1,21 +1,11 @@
 #include "Loader.h"
 
-#include "../Minecraft.World/Commands/CommandDispatcher.h"
-#include "../Minecraft.World/Level/Level.h"
-#include "../Minecraft.World/Level/LevelChunk.h"
-#include "../Minecraft.World/Player/Player.h"
-#include "../Minecraft.Client/Level/ServerLevel.h"
-#include "../Minecraft.Client/Player/ServerPlayer.h"
-#include "../Minecraft.Client/Network/PlayerList.h"
-#include "../Minecraft.Client/MinecraftServer.h"
-
 #include <filesystem>
 #include <fstream>
 #include <utility>
 #include <string>
 
-#include "../Minecraft.World/Items/Item.h"
-#include "Common/EventSystem/EventBindings.h"
+#include "Lua/LuaBindings.h"
 
 class MinecraftServer;
 
@@ -29,8 +19,9 @@ Loader::Loader() {
         fs::create_directory("mods/");
     }
 
-    registerClientFunctions();
-    EventBindings::bindServerEvents(luaServer);
+    LuaBindings::bindCommonFunctions({ &luaServer, &luaClient });
+    LuaBindings::bindClientFunctions(luaClient);
+    LuaBindings::bindServerEvents(luaServer);
     app.DebugPrintf("Cactus ModLoader initialized!\n");
 }
 
@@ -44,108 +35,7 @@ nlohmann::json Loader::getManifest(string filePath) {
     return nlohmann::json::parse(data);
 }
 
-std::vector<std::string> langList(2000); //increase if needed
-
-int itemNameIdMax = 1937;
-int itemIdMax = 406;
-
-int nextItemNameId() {
-    itemNameIdMax += 1;
-    return itemNameIdMax;
-}
-
-int nextItemId() {
-    itemIdMax += 1;
-    return itemIdMax;
-}
-
-void Loader::registerClientFunctions() {
-    luaClient.set_function("registerItem", [this](string name) {
-        int itemNameId = nextItemNameId();
-        int itemId = nextItemId();
-        Item::items[itemId] = (new Item(itemId))->setTextureName(L"stick")->handEquipped()->setDescriptionId(itemNameId)->setUseDescriptionId(IDS_DESC_STICK); // im SO close to getting name working.. unsure whats wrong.
-        langList[itemNameId] = name;
-        return itemId;
-    });
-
-    luaClient.set_function("log", [this](string message) {
-        this->log(message);
-    });
-}
-
-void Loader::changeLang(StringTable& m_stringTable) {
-    using convert_type = std::codecvt_utf8<wchar_t>;
-    std::wstring_convert<convert_type, wchar_t> converter;
-
-    for (size_t i = 0; i < langList.size(); i++) {
-        if (langList[i].empty()) continue;
-
-        const char* text = langList[i].c_str();
-        std::wstring wtext = std::wstring(text, text + strlen(text));
-        m_stringTable.addData(i, wtext);
-        app.DebugPrintf("[Lua] ");
-        app.DebugPrintf(to_string(i).c_str());
-        app.DebugPrintf(" is the id for: \n");
-        app.DebugPrintf(("[Lua] "+converter.to_bytes(m_stringTable.getString(i))+"\n").c_str());
-    }
-}
-
-void Loader::registerServerFunctions(MinecraftServer* server) {
-    luaServer["server"] = server;
-
-    luaServer.new_usertype<MinecraftServer>("MinecraftServer",
-        "getCommandDispatcher", &MinecraftServer::getCommandDispatcher,
-        "getPlayers", [](MinecraftServer* server) -> std::vector<std::shared_ptr<ServerPlayer>>& {
-            return server->getPlayers()->players;
-        }
-    );
-
-    luaServer.set_function("log", [this](string message) {
-        this->log(message);
-    });
-    luaServer.set_function("test", [this](string event, sol::function func) {
-        this->test(event, func);
-    });
-
-    //ok so you need to register EVERYTHING you want with this, im gonna hurt myself
-    luaServer.new_usertype<CommandSender>("CommandSender",
-        "hasPermission", &CommandSender::hasPermission
-    );
-
-    luaServer.new_usertype<Player>("Player",
-        "getPos", &Player::getPos,
-        "setPos", sol::resolve<void(double, double, double)>(&Player::setPos),
-        "abilities", &Player::abilities,
-        "changeDimension", &Player::changeDimension,
-        "sendMessage", &Player::sendMessage,
-        sol::base_classes, sol::bases<CommandSender>()
-    );
-
-    luaServer.new_usertype<CommandDispatcher>("CommandDispatcher",
-        "performCommand", &CommandDispatcher::performCommand
-    );
-
-    luaServer.new_enum<EGameCommand>("EGameCommand", {
-            {"COUNT", eGameCommand_COUNT},
-            {"EnchantItem", EGameCommand::eGameCommand_EnchantItem},
-            {"Experience", EGameCommand::eGameCommand_Experience},
-            {"GameMode", EGameCommand::eGameCommand_GameMode},
-            {"Give", EGameCommand::eGameCommand_Give},
-            {"Kill", EGameCommand::eGameCommand_Kill},
-            {"Teleport", EGameCommand::eGameCommand_Teleport},
-            {"Time", EGameCommand::eGameCommand_Time},
-            {"ToggleDownfall", EGameCommand::eGameCommand_ToggleDownfall}
-        }
-    );
-
-    luaServer.new_usertype<ServerLevel>("ServerLevel",
-        "getBlocksAndData", &ServerLevel::getBlocksAndData,
-        "setBlocksAndData", &ServerLevel::setBlocksAndData,
-        "getServer", &ServerLevel::getServer
-    );
-}
-
-void Loader::log(string message) {
+void Loader::log(const string& message) {
     app.DebugPrintf(("[Lua] " + message + "\n").c_str());
 }
 
@@ -156,8 +46,8 @@ string Loader::loadFile(string fileName) {
     return buf.str();
 }
 
-void Loader::test(string event, sol::function func) { //testing function returning from lua
-    func();
+void Loader::registerServerFunctions(MinecraftServer *server) {
+    LuaBindings::bindServerFunctions(luaServer, server);
 }
 
 void Loader::collectMods() {
