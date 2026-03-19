@@ -1,7 +1,8 @@
 #include "ItemRegistry.h"
 #include "Client/Rendering/ModTextureAtlas.h"
 #include "../Minecraft.World/Items/Item.h"
-#include "DurangoMedia/loc/strings.h"
+#include "ItemFactory.h"
+
 
 std::vector<std::wstring> ItemRegistry::langList(2000);
 int ItemRegistry::itemNameIdMax = 1937;
@@ -17,7 +18,7 @@ int ItemRegistry::nextItemId() {
     return itemIdMax;
 }
 
-int ItemRegistry::registerItem(const std::wstring& modId, const std::string& name, const std::string& texturePath) {
+int ItemRegistry::registerItem(const std::wstring& modId, const std::string& name, const ItemDefinition& def, const std::string& texturePath) {
     int nameId = nextItemNameId();
     int itemId = nextItemId();
 
@@ -39,7 +40,7 @@ int ItemRegistry::registerItem(const std::wstring& modId, const std::string& nam
             ModTextureAtlas::getInstance()->registerTexture(wname, std::move(pixels), w, h);
             delete img;
 
-            Item::items[itemId] = (new Item(itemId - 256))
+            Item::items[itemId] = (ItemFactory::create(def, itemId - 256))
             ->setTextureName(wname)
             ->handEquipped()
             ->setDescriptionId(nameId)
