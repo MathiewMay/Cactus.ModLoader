@@ -1,8 +1,7 @@
 #include "ItemRegistry.h"
 #include "Client/Rendering/ModTextureAtlas.h"
 #include "../Minecraft.World/Items/Item.h"
-#include "../Minecraft.World/Items/FoodItem.h"
-#include "../Minecraft.World/Util/FoodConstants.h"
+#include "DurangoMedia/loc/strings.h"
 
 std::vector<std::wstring> ItemRegistry::langList(2000);
 int ItemRegistry::itemNameIdMax = 1937;
@@ -40,11 +39,13 @@ int ItemRegistry::registerItem(const std::string& name, const std::string& textu
             ModTextureAtlas::getInstance()->registerTexture(wname, std::move(pixels), w, h);
             delete img;
 
-            Item::items[itemId] = (new FoodItem(itemId, 8, FoodConstants::FOOD_SATURATION_GOOD, true))
+            printf("REGISTERING ModItem NOW");
+            Item::items[itemId] = (new Item(itemId - 256))
             ->setTextureName(wname)
             ->handEquipped()
             ->setDescriptionId(nameId)
             ->setUseDescriptionId(IDS_DESC_STICK);
+            printf("REGISTERING DONE ModItem NOW");
         }else {
             Item::items[itemId] = (new Item(itemId))->setTextureName(L"stick")->handEquipped()->setDescriptionId(nameId)->setUseDescriptionId(IDS_DESC_STICK);
         }
