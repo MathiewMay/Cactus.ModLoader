@@ -1,6 +1,6 @@
 #include "ItemRegistry.h"
 #include "Client/Rendering/ModTextureAtlas.h"
-//#include "../Minecraft.World/Items/Item.h"
+#include "../Minecraft.World/Items/Item.h"
 #include "ItemFactory.h"
 
 
