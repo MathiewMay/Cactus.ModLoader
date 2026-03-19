@@ -11,6 +11,7 @@
 #include "../Minecraft.Client/Network/PlayerConnection.h"
 
 /* Server Includes */
+#include "../../Minecraft.Client/Level/ServerLevel.h"
 #include "Level/ServerLevel.h"
 #include "Registry/ItemRegistry.h"
 #include "Server/Events/Item/ItemInteractEvent.h"
@@ -236,7 +237,8 @@ void LuaBindings::bindServerFunctions(sol::state& lua, MinecraftServer* server) 
     lua.new_usertype<ServerLevel>("ServerLevel",
         "getBlocksAndData", &ServerLevel::getBlocksAndData,
         "setBlocksAndData", &ServerLevel::setBlocksAndData,
-        "getServer", &ServerLevel::getServer
+        "getServer", &ServerLevel::getServer,
+        "isClientside", &ServerLevel::isClientSide
     );
 }
 

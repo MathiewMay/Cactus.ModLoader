@@ -10,7 +10,7 @@ struct ItemInteractEvent final : public CactusEvent {
 
 
     /* CactusModLoader [IMPL-AT] (Minecraft.World/Item/Item.cpp) */
-    ItemInteractEvent(ItemInstance item, ServerLevel* level, ServerPlayer player) : item(&item), level(level), player(&player) {
+    ItemInteractEvent(ItemInstance* item, ServerLevel* level, ServerPlayer* player) : item(item), level(level), player(player) {
         eventName = "ItemInteract";
     }
 };

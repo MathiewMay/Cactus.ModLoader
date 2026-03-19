@@ -12,4 +12,13 @@ function main()
     registerEvent("PlayerBlockBreakEvent", function(event)
         event:setCancelled(false)
     end)
+
+    log("item interact")
+    registerEvent("ItemInteract", function(event)
+        log(event)
+        log(event.level)
+        log(event.level.isClientside)
+        log(event.level.isClientside())
+    end)
+    log("did we error")
 end

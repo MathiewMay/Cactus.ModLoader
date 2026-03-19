@@ -56,6 +56,7 @@ int ItemRegistry::registerItem(const std::wstring& modId, const std::string& nam
 
 void ItemRegistry::changeLang(StringTable& m_stringTable) {
     // So c++ just deprecated wstring_convert with no alternative 🥀 either way we could just have used wstring from the start instead of storing langList as a list of strings
+    //CML R: yeah but i HATE wstring ewwwww gross
     for (size_t i = 0; i < langList.size(); i++) {
         if (langList[i].empty()) continue;
         m_stringTable.addData(i, langList[i]);
