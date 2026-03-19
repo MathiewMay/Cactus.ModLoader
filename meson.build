@@ -1,7 +1,7 @@
 cml_sources = run_command(
     'sh', '-c',
     'find "' + meson.current_source_dir()
-    + '" -maxdepth 3 \\( -name "*.cpp" -o -name "*.c" \\)',
+    + '" -maxdepth 6 \\( -name "*.cpp" -o -name "*.c" \\)',
     check: true
 ).stdout().strip().split('\n')
 

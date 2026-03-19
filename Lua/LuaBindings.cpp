@@ -18,9 +18,10 @@
 #include "Server/Events/Player/PlayerBlockPlaceEvent.h"
 #include "Server/Events/Player/PlayerConnectionEvent.h"
 #include "Server/Events/Player/PlayerJoinEvent.h"
-
 #include "Server/Events/Player/PlayerFlightStartedEvent.h"
 #include "Server/Events/Player/PlayerFlightEndedEvent.h"
+
+#include "../Minecraft.World/Network/Packets/PlayerAbilitiesPacket.h"
 
 void LuaBindings::bindCommonFunctions(const std::vector<sol::state*> &luaStates) {
     for (sol::state* lua : luaStates) {
@@ -234,7 +235,7 @@ void LuaBindings::bindServerFunctions(sol::state& lua, MinecraftServer* server) 
 }
 
 void LuaBindings::bindClientFunctions(sol::state& lua) {
-    lua.set_function("registerItem", [](const std::string &name) {
-        return ItemRegistry::registerItem(name);
+    lua.set_function("registerItem", [](const std::string& name, const std::string& texturePath) {
+        return ItemRegistry::registerItem(name, texturePath);
     });
 }

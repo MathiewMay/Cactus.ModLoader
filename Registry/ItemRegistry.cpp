@@ -1,7 +1,10 @@
 #include "ItemRegistry.h"
-#include "../../Minecraft.World/Items/Item.h"
+#include "Client/Rendering/ModTextureAtlas.h"
+#include "../Minecraft.World/Items/Item.h"
+#include "../Minecraft.World/Items/FoodItem.h"
+#include "../Minecraft.World/Util/FoodConstants.h"
 
-std::vector<std::string> ItemRegistry::langList(2000);
+std::vector<std::wstring> ItemRegistry::langList(2000);
 int ItemRegistry::itemNameIdMax = 1937;
 int ItemRegistry::itemIdMax = 406;
 
@@ -15,29 +18,47 @@ int ItemRegistry::nextItemId() {
     return itemIdMax;
 }
 
-int ItemRegistry::registerItem(const std::string& name) {
+int ItemRegistry::registerItem(const std::string& name, const std::string& texturePath) {
     int nameId = nextItemNameId();
     int itemId = nextItemId();
 
-    Item::items[itemId] = (new Item(itemId))->setTextureName(L"stick")->handEquipped()->setDescriptionId(nameId)->setUseDescriptionId(IDS_DESC_STICK);
+    std::wstring wname(name.begin(), name.end());
 
-    langList[nameId] = name;
+    if (!texturePath.empty() && ModTextureAtlas::getInstance() != nullptr) {
+        std::wstring wpath(texturePath.begin(), texturePath.end());
+
+        BufferedImage* img = new BufferedImage(wpath, true, false, L"mods/ExampleMod/");
+
+        if (img != nullptr) {
+            int w = img->getWidth();
+            int h = img->getHeight();
+
+            std::vector<int> pixels(w*h);
+            intArray wrapper(pixels.data(), w*h);
+            img->getRGB(0,0,w,h,wrapper,0,w);
+
+            ModTextureAtlas::getInstance()->registerTexture(wname, std::move(pixels), w, h);
+            delete img;
+
+            Item::items[itemId] = (new FoodItem(itemId, 8, FoodConstants::FOOD_SATURATION_GOOD, true))
+            ->setTextureName(wname)
+            ->handEquipped()
+            ->setDescriptionId(nameId)
+            ->setUseDescriptionId(IDS_DESC_STICK);
+        }else {
+            Item::items[itemId] = (new Item(itemId))->setTextureName(L"stick")->handEquipped()->setDescriptionId(nameId)->setUseDescriptionId(IDS_DESC_STICK);
+        }
+    }
+
+
+    langList[nameId] = wname;
     return itemId;
 }
 
 void ItemRegistry::changeLang(StringTable& m_stringTable) {
-    using convert_type = std::codecvt_utf8<wchar_t>;
-    std::wstring_convert<convert_type, wchar_t> converter;
-
+    // So c++ just deprecated wstring_convert with no alternative 🥀 either way we could just have used wstring from the start instead of storing langList as a list of strings
     for (size_t i = 0; i < langList.size(); i++) {
         if (langList[i].empty()) continue;
-
-        const char* text = langList[i].c_str();
-        std::wstring wtext = std::wstring(text, text + strlen(text));
-        m_stringTable.addData(i, wtext);
-        app.DebugPrintf("[Lua] ");
-        app.DebugPrintf(to_string(i).c_str());
-        app.DebugPrintf(" is the id for: \n");
-        app.DebugPrintf(("[Lua] "+converter.to_bytes(m_stringTable.getString(i))+"\n").c_str());
+        m_stringTable.addData(i, langList[i]);
     }
 }

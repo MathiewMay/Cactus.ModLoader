@@ -5,6 +5,7 @@
 #include <utility>
 #include <string>
 
+#include "Client/Rendering/ModTextureAtlas.h"
 #include "Lua/LuaBindings.h"
 
 class MinecraftServer;
@@ -13,6 +14,7 @@ namespace fs = std::filesystem;
 using string = std::string;
 
 Loader::Loader() {
+    ModTextureAtlas::createInstance();
     luaServer.open_libraries(sol::lib::base, sol::lib::string, sol::lib::table, sol::lib::package);
     luaClient.open_libraries(sol::lib::base, sol::lib::string, sol::lib::table, sol::lib::package);
 
@@ -26,11 +28,11 @@ Loader::Loader() {
     app.DebugPrintf("Cactus ModLoader initialized!\n");
 }
 
-void Loader::_debugPrint(string output) {
+void Loader::_debugPrint(const string &output) {
     app.DebugPrintf(("[Lua] "+output+"\n").c_str());
 }
 
-nlohmann::json Loader::getManifest(string filePath) {
+nlohmann::json Loader::getManifest(const string &filePath) {
     string fullPath = filePath + "/manifest.json";
     auto data = loadFile(fullPath);
     return nlohmann::json::parse(data);

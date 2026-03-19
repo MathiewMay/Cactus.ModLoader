@@ -29,7 +29,7 @@ public:
     void executeServerScripts();
     void executeClientScripts();
 
-    static void _debugPrint(std::string output);
+    static void _debugPrint(const std::string &output);
 
 
     std::map<std::string_view, CactusMod> mods_;
@@ -37,6 +37,6 @@ public:
     sol::state luaServer;
     sol::state luaClient;
 private:
-    static nlohmann::json getManifest(std::string filePath);
+    static nlohmann::json getManifest(const std::string &filePath);
     static std::string loadFile(std::string fileName);
 };

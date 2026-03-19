@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../../../Common/EventSystem/CactusEvent.h"
+#include "Common/EventSystem/CactusEvent.h"
 
 struct ItemInteractEntityEvent final : public CactusEvent {
     ItemInstance* item;
