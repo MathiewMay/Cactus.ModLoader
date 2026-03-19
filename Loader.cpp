@@ -18,6 +18,13 @@ Loader::Loader() {
     luaServer.open_libraries(sol::lib::base, sol::lib::string, sol::lib::table, sol::lib::package);
     luaClient.open_libraries(sol::lib::base, sol::lib::string, sol::lib::table, sol::lib::package);
 
+    auto panicHandler = [](lua_State* L) -> int {
+        fprintf(stderr, "[Lua] PANIC: %s\n", lua_tostring(L, -1));
+        return 0;
+    };
+    lua_atpanic(luaServer.lua_state(), panicHandler);
+    lua_atpanic(luaClient.lua_state(), panicHandler);
+
     if (!fs::exists("mods")) {
         fs::create_directory("mods/");
     }
@@ -29,7 +36,7 @@ Loader::Loader() {
 }
 
 void Loader::_debugPrint(const string &output) {
-    app.DebugPrintf(("[Lua] "+output+"\n").c_str());
+    app.DebugPrintf(("[Cactus ModLoader] "+output+"\n").c_str());
 }
 
 nlohmann::json Loader::getManifest(const string &filePath) {
@@ -39,7 +46,7 @@ nlohmann::json Loader::getManifest(const string &filePath) {
 }
 
 void Loader::log(const string& message) {
-    app.DebugPrintf(("[Lua] " + message + "\n").c_str());
+    app.DebugPrintf(("[Cactus ModLoader] [LOG] " + message + "\n").c_str());
 }
 
 string Loader::loadFile(string fileName) {
@@ -60,9 +67,16 @@ bool hasMetadata(nlohmann::json& json, const std::string& key) {
 void Loader::collectMods() {
     //iterate through mods folder
     for (const auto & modEntry : fs::directory_iterator("mods/")) {
-        nlohmann::json json = getManifest(modEntry.path()); //eat json data yummy :yum:
-        
+        if (!modEntry.is_directory()) continue;
         string modPath = modEntry.path().string();
+
+        nlohmann::json json;
+        try {
+            json = getManifest(modEntry.path());
+        } catch (const std::exception& e) {
+            _debugPrint("Could not read manifest.json for '"+modPath+"' exception: "+e.what());
+            continue;
+        }
         
         CactusMod m;
         bool missingRequired = false;
@@ -78,11 +92,18 @@ void Loader::collectMods() {
 
         if (missingRequired) continue;
 
+        string folderName = modEntry.path().filename().string();
+        if (folderName != m.getModID()) {
+            _debugPrint("Folder '"+folderName+"' should match modId '"+std::string(m.getModID()));
+            continue;
+        }
         mods_[m.getName()] = m;
     }
 }
 
 void Loader::refresh(sol::state& luaState,std::string_view (CactusMod::*getEntry)() const,bool prependPath) {
+    std::vector<CactusMod> failedMods;
+
     for (auto& [name,mod] : mods_) {
         std::string modName = std::string(mod.getName());
         std::string modId = std::string(mod.getModID());
@@ -100,7 +121,16 @@ void Loader::refresh(sol::state& luaState,std::string_view (CactusMod::*getEntry
         }
 
         sol::environment modEnv(luaState, sol::create, luaState.globals());
-        auto result = luaState.script_file(scriptPath, modEnv);
+        modEnv["modId"] = modId;
+
+        sol::protected_function_result result;
+        try {
+            result = luaState.safe_script_file(scriptPath, modEnv, sol::script_pass_on_error);
+        } catch (const sol::error& e) {
+            _debugPrint("There is a lua error in '"+modId+"/"+modEntry+"' error: "+e.what());
+            failedMods.push_back(mod);
+            continue;
+        }
 
         if (result.valid()) {
             if (&luaState == &luaServer) {
@@ -111,8 +141,14 @@ void Loader::refresh(sol::state& luaState,std::string_view (CactusMod::*getEntry
             _debugPrint(modId + "'s '" + modEntry + "' has been loaded successfully");
         } else {
             sol::error err = result;
-            _debugPrint("code bad: " + std::string(err.what()));
+            _debugPrint("There is a lua error in '"+modId+"/"+modEntry+"' error: "+err.what());
+            failedMods.push_back(mod);
         }
+    }
+
+    for (const auto& failedMod : failedMods) {
+        _debugPrint("Unloading '"+std::string(failedMod.getName())+"' due to script error");
+        mods_.erase(failedMod.getName());
     }
 }
 
@@ -127,7 +163,11 @@ void Loader::refreshClientScripts() {
 void Loader::execute(sol::environment& (CactusMod::*getEnv)()) {
     for (auto& [name, mod] : mods_) {
         std::string modName = std::string(mod.getName());
-        sol::protected_function mainFunc = (mod.*getEnv)()["main"];
+
+        sol::environment& env = (mod.*getEnv)();
+        if (!env.valid()) continue;
+
+        sol::protected_function mainFunc = env["main"];
 
         if (mainFunc.valid()) {
             auto result = mainFunc();

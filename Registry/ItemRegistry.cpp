@@ -17,7 +17,7 @@ int ItemRegistry::nextItemId() {
     return itemIdMax;
 }
 
-int ItemRegistry::registerItem(const std::string& name, const std::string& texturePath) {
+int ItemRegistry::registerItem(const std::wstring& modId, const std::string& name, const std::string& texturePath) {
     int nameId = nextItemNameId();
     int itemId = nextItemId();
 
@@ -39,13 +39,11 @@ int ItemRegistry::registerItem(const std::string& name, const std::string& textu
             ModTextureAtlas::getInstance()->registerTexture(wname, std::move(pixels), w, h);
             delete img;
 
-            printf("REGISTERING ModItem NOW");
             Item::items[itemId] = (new Item(itemId - 256))
             ->setTextureName(wname)
             ->handEquipped()
             ->setDescriptionId(nameId)
             ->setUseDescriptionId(IDS_DESC_STICK);
-            printf("REGISTERING DONE ModItem NOW");
         }else {
             Item::items[itemId] = (new Item(itemId))->setTextureName(L"stick")->handEquipped()->setDescriptionId(nameId)->setUseDescriptionId(IDS_DESC_STICK);
         }

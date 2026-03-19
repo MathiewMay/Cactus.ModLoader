@@ -20,7 +20,9 @@
 #include "Server/Events/Player/PlayerJoinEvent.h"
 #include "Server/Events/Player/PlayerFlightStartedEvent.h"
 #include "Server/Events/Player/PlayerFlightEndedEvent.h"
+#include "Common/CactusUtils.h"
 
+#include "../Minecraft.World/Items/Item.h"
 #include "../Minecraft.World/Network/Packets/PlayerAbilitiesPacket.h"
 
 void LuaBindings::bindCommonFunctions(const std::vector<sol::state*> &luaStates) {
@@ -49,7 +51,11 @@ void LuaBindings::bindServerEvents(sol::state& lua) {
     );
 
     lua.new_usertype<Inventory>("Inventory",
-        "setItem", [](Inventory& inv, const int slot, const int itemId) {
+        "setItem", [](Inventory& inv, const int slot, const int itemId, sol::this_state state) {
+            if (Item::items[itemId] == nullptr) {
+                CactusUtils::LuaException(state, "Item id "+std::to_string(itemId)+" does not exist");
+                return;
+            }
             inv.setItem(slot, std::make_shared<ItemInstance>(itemId, 1, 0));
         },
         "getItem", [](Inventory& inv, const int slot) {
@@ -235,7 +241,10 @@ void LuaBindings::bindServerFunctions(sol::state& lua, MinecraftServer* server) 
 }
 
 void LuaBindings::bindClientFunctions(sol::state& lua) {
-    lua.set_function("registerItem", [](const std::string& name, const std::string& texturePath) {
-        return ItemRegistry::registerItem(name, texturePath);
+    lua.set_function("registerItem", [](sol::this_environment env, const std::string& name, const std::string& texturePath) {
+        sol::environment& modEnv = env;
+        std::string envModId = modEnv["modId"];
+        std::wstring modId = std::wstring(envModId.begin(), envModId.end());
+        return ItemRegistry::registerItem(modId, name, texturePath);
     });
 }
