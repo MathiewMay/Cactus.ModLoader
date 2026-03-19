@@ -26,7 +26,7 @@ int ItemRegistry::registerItem(const std::wstring& modId, const std::string& nam
     if (!texturePath.empty() && ModTextureAtlas::getInstance() != nullptr) {
         std::wstring wpath(texturePath.begin(), texturePath.end());
 
-        BufferedImage* img = new BufferedImage(wpath, true, false, L"mods/ExampleMod/");
+        BufferedImage* img = new BufferedImage(wpath, true, false, L"mods/"+modId+L"/");
 
         if (img != nullptr) {
             int w = img->getWidth();
