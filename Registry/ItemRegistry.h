@@ -4,9 +4,11 @@
 #include <vector>
 #include <string>
 
+struct ItemDefinition;
+
 class ItemRegistry {
 public:
-    static int registerItem(const std::wstring& modId, const std::string& name,  const std::string& texturePath = "");
+    static int registerItem(const std::wstring& modId, const std::string& name, const ItemDefinition& def, const std::string& texturePath = "");
     static void changeLang(StringTable& m_stringTable);
 private:
     static std::vector<std::wstring> langList;

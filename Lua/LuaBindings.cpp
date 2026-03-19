@@ -13,6 +13,8 @@
 /* Server Includes */
 #include "Level/ServerLevel.h"
 #include "Registry/ItemRegistry.h"
+#include "Registry/ItemFactory.h"
+
 #include "Server/Events/Item/ItemInteractEvent.h"
 #include "Server/Events/Player/PlayerBlockBreakEvent.h"
 #include "Server/Events/Player/PlayerBlockPlaceEvent.h"
@@ -241,10 +243,34 @@ void LuaBindings::bindServerFunctions(sol::state& lua, MinecraftServer* server) 
 }
 
 void LuaBindings::bindClientFunctions(sol::state& lua) {
-    lua.set_function("registerItem", [](sol::this_environment env, const std::string& name, const std::string& texturePath) {
+    lua.new_enum<EBaseItem>("EBaseItem", {
+        {"Default", EBaseItem::Default},
+        {"Food", EBaseItem::Food},
+        {"Hoe", EBaseItem::Hoe},
+        {"Weapon", EBaseItem::Weapon},
+        {"Pickaxe", EBaseItem::Pickaxe},
+        {"Hatchet", EBaseItem::Hatchet}
+    });
+
+    lua.new_usertype<ItemDefinition>("ItemDefinition",
+        sol::constructors<ItemDefinition(sol::table)>(),
+        "type", &ItemDefinition::type,
+        "nutrition", &ItemDefinition::nutrition,
+        "saturationMod", &ItemDefinition::saturationMod,
+        "isMeat", &ItemDefinition::isMeat,
+        "tier", &ItemDefinition::tier
+    );
+
+    lua.new_usertype<Item::Tier>("Tier",
+        sol::constructors<Item::Tier(int,int,float,int,int)>(),
+        "getUses", &Item::Tier::getUses,
+        "getLevel", &Item::Tier::getLevel
+    );
+
+    lua.set_function("registerItem", [](sol::this_environment env, const std::string& name, const std::string& texturePath, const ItemDefinition& def) {
         sol::environment& modEnv = env;
         std::string envModId = modEnv["modId"];
         std::wstring modId = std::wstring(envModId.begin(), envModId.end());
-        return ItemRegistry::registerItem(modId, name, texturePath);
+        return ItemRegistry::registerItem(modId, name, def, texturePath);
     });
 }
