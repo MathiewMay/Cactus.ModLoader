@@ -46,7 +46,7 @@ nlohmann::json Loader::getManifest(const string &filePath) {
 }
 
 void Loader::log(const string& message) {
-    app.DebugPrintf(("[Cactus ModLoader] [LOG] " + message + "\n").c_str());
+    app.DebugPrintf(("[Cactus ModLoader] " + message + "\n").c_str());
 }
 
 string Loader::loadFile(string fileName) {

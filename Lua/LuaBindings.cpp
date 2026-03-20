@@ -27,11 +27,27 @@
 #include "../Minecraft.World/Items/Item.h"
 #include "../Minecraft.World/Network/Packets/PlayerAbilitiesPacket.h"
 
+#include "LuaStructs.h"
+
 void LuaBindings::bindCommonFunctions(const std::vector<sol::state*> &luaStates) {
     for (sol::state* lua : luaStates) {
         lua->set_function("log", [](const std::string &message) {
             Loader::log(message);
         });
+
+        lua->new_usertype<LuaVec3>("Vec3",
+            sol::constructors<LuaVec3(double, double, double)>(),
+            "x", &LuaVec3::x,
+            "y", &LuaVec3::y,
+            "z", &LuaVec3::z,
+            "distanceTo", &LuaVec3::distanceTo,
+            sol::meta_function::to_string, &LuaVec3::toString
+        );
+
+        lua->new_usertype<LuaBlock>("Block",
+            "pos", &LuaBlock::pos,
+            "id", &LuaBlock::id
+        );
     }
 }
 
@@ -62,13 +78,22 @@ void LuaBindings::bindServerEvents(sol::state& lua) {
         },
         "getItem", [](Inventory& inv, const int slot) {
             return inv.getItem(slot);
+        },
+        "clear", [](Inventory& inv) {
+            inv.clearInventory();
         }
     );
 
     lua.new_usertype<ItemInstance>("ItemInstance",
         "getHoverName", [](ItemInstance& item) {
             return item.getHoverName();
-        }
+        },
+        "isStackable", &ItemInstance::isStackable,
+        "isEnchanted", &ItemInstance::isEnchanted,
+        "isDamaged", &ItemInstance::isDamaged,
+        "damageValue", &ItemInstance::getDamageValue,
+        "maxDamage", &ItemInstance::getMaxDamage,
+        "getAmount", &ItemInstance::count
     );
 
     lua.new_usertype<ServerPlayerGameMode>("ServerPlayerGameMode",
@@ -95,8 +120,14 @@ void LuaBindings::bindServerEvents(sol::state& lua) {
         "setHealth", [](ServerPlayer& player, int health) {
             player.setHealth(health);
         },
-        "teleport", [](ServerPlayer& player, double x, double y, double z) {
-            player.teleportTo(x,y,z);
+        "pos", sol::property([](ServerPlayer& player) { return LuaVec3(player.x, player.y, player.z); }),
+        "teleport", [](ServerPlayer& player, sol::object target, sol::this_state state) {
+            if (target.is<LuaVec3>()) {
+                auto vec3 = target.as<LuaVec3>();
+                player.teleportTo(vec3.x, vec3.y, vec3.z);
+            }else {
+                CactusUtils::LuaException(state, "Not a valid Vec3 object");
+            }
         },
         "setCanFly", [](ServerPlayer& player, bool toggle) {
             // Toggles the PERMISSION to fly
@@ -144,26 +175,21 @@ void LuaBindings::bindServerEvents(sol::state& lua) {
         "setGameMode", [](ServerPlayer& player, int gameTypeId) {
             if (GameType* type = GameType::byId(gameTypeId)) player.setGameMode(type);
         },
-        "sendMessage", [](ServerPlayer& p, const std::wstring& message) {
-            p.sendMessage(message);
+        "sendMessage", [](ServerPlayer& p, const std::string& message) {
+            std::wstring wmessage(message.begin(), message.end());
+            p.sendMessage(wmessage);
         }
     );
 
     lua.new_usertype<PlayerBlockBreakEvent>("PlayerBlockBreakEvent",
         "player", &PlayerBlockBreakEvent::player,
-        "x", &PlayerBlockBreakEvent::x,
-        "y", &PlayerBlockBreakEvent::y,
-        "z", &PlayerBlockBreakEvent::z,
-        "blockId", &PlayerBlockBreakEvent::blockId,
+        "block", &PlayerBlockBreakEvent::block,
         sol::base_classes, sol::bases<CancellableCactusEvent, CactusEvent>()
     );
 
     lua.new_usertype<PlayerBlockPlaceEvent>("PlayerBlockPlaceEvent",
         "player", &PlayerBlockPlaceEvent::player,
-        "x", &PlayerBlockPlaceEvent::x,
-        "y", &PlayerBlockPlaceEvent::y,
-        "z", &PlayerBlockPlaceEvent::z,
-        "blockId", &PlayerBlockPlaceEvent::blockId,
+        "block", &PlayerBlockPlaceEvent::block,
         sol::base_classes, sol::bases<CancellableCactusEvent, CactusEvent>()
     );
 
@@ -262,7 +288,7 @@ void LuaBindings::bindClientFunctions(sol::state& lua) {
     );
 
     lua.new_usertype<Item::Tier>("Tier",
-        sol::constructors<Item::Tier(int,int,float,int,int)>(),
+        sol::constructors<Item::Tier(int,int,double,int,int)>(),
         "getUses", &Item::Tier::getUses,
         "getLevel", &Item::Tier::getLevel
     );
