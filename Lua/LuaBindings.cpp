@@ -41,7 +41,11 @@ void LuaBindings::bindCommonFunctions(const std::vector<sol::state*> &luaStates)
             "y", &LuaVec3::y,
             "z", &LuaVec3::z,
             "distanceTo", &LuaVec3::distanceTo,
-            sol::meta_function::to_string, &LuaVec3::toString
+            sol::meta_function::to_string, &LuaVec3::toString,
+            sol::meta_function::addition, &LuaVec3::addition,
+            sol::meta_function::subtraction, &LuaVec3::subtraction,
+            sol::meta_function::multiplication, &LuaVec3::multiplication,
+            sol::meta_function::division, &LuaVec3::division
         );
 
         lua->new_usertype<LuaBlock>("Block",

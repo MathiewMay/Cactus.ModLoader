@@ -9,6 +9,18 @@ struct LuaVec3 {
     std::string toString() const {
         return "Vec3(x: " + std::to_string(x) + ", y: " + std::to_string(y) + ", z: " + std::to_string(z) + ")";
     }
+    LuaVec3 addition(const LuaVec3& vec3) const {
+        return LuaVec3(vec3.x + x, vec3.y + y, vec3.z + z);
+    }
+    LuaVec3 subtraction(const LuaVec3& vec3) const {
+        return LuaVec3(x - vec3.x, y - vec3.y, z - vec3.z);
+    }
+    LuaVec3 multiplication(const LuaVec3& vec3) const {
+        return LuaVec3(x * vec3.x, y * vec3.y, z * vec3.z);
+    }
+    LuaVec3 division(const LuaVec3& vec3) const {
+        return LuaVec3(x / vec3.x, y / vec3.y, z / vec3.z);
+    }
 };
 
 struct LuaBlock {
