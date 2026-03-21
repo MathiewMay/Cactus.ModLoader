@@ -7,16 +7,16 @@
 #include "../../Minecraft.World/Items/WeaponItem.h"
 #include "../../Minecraft.World/Items/PickaxeItem.h"
 #include "../../Minecraft.World/Items/HatchetItem.h"
+#include "../../Minecraft.World/Items/ShovelItem.h"
 
 enum EBaseItem {
     Default,
     Food,
     Hoe,
     Weapon,
-    // Note: Segfault when using DiggerItems
     Pickaxe,
     Hatchet,
-
+    Shovel,
 };
 
 struct ItemDefinition {
@@ -48,6 +48,8 @@ class ItemFactory {
 public:
     static Item* create(const ItemDefinition& def, int id) {
         switch (def.type) {
+            case EBaseItem::Shovel:
+                return (new ShovelItem(id,def.tier));
             case EBaseItem::Hatchet:
                 return (new HatchetItem(id,def.tier));
             case EBaseItem::Pickaxe:
