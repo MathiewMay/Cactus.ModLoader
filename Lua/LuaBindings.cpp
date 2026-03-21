@@ -16,7 +16,7 @@
 #include "Level/ServerLevel.h"
 #include "Registry/ItemRegistry.h"
 #include "Registry/ItemFactory.h"
-
+#include "../Registry/BlockRegistry.h"
 #include "Server/Events/Item/ItemInteractEvent.h"
 #include "Server/Events/Player/PlayerBlockBreakEvent.h"
 #include "Server/Events/Player/PlayerBlockPlaceEvent.h"
@@ -27,9 +27,11 @@
 #include "Common/CactusUtils.h"
 
 #include "../Minecraft.World/Items/Item.h"
+#include "../Minecraft.World/Blocks/Tile.h"
+#include "../Minecraft.World/Blocks/Material.h"
 #include "../Minecraft.World/Network/Packets/PlayerAbilitiesPacket.h"
-
 #include "LuaStructs.h"
+
 
 void LuaBindings::bindCommonFunctions(const std::vector<sol::state*> &luaStates) {
     for (sol::state* lua : luaStates) {
@@ -316,5 +318,11 @@ void LuaBindings::bindClientFunctions(sol::state& lua) {
         std::string envModId = modEnv["modId"];
         std::wstring modId = std::wstring(envModId.begin(), envModId.end());
         return ItemRegistry::registerItem(modId, name, def, texturePath);
+    });
+    lua.set_function("registerBlock", [](sol::this_environment env, const std::string& name, const std::string& texturePath) {
+        sol::environment& modEnv = env;
+        std::string envModId = modEnv["modId"];
+        std::wstring modId = std::wstring(envModId.begin(), envModId.end());
+        return BlockRegistry::registerBlock(modId, name, texturePath);
     });
 }

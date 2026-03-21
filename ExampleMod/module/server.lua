@@ -3,6 +3,7 @@ function main()
         local player = event.player
 
         player.inventory:setItem(0, 407)
+        player.inventory:setItem(1, 408)
     end)
 
     registerEvent("PlayerBlockPlaceEvent", function(event)
@@ -13,12 +14,8 @@ function main()
         event:setCancelled(false)
     end)
 
-    log("item interact")
     registerEvent("ItemInteract", function(event)
-        log(event)
-        log(event.level)
-        log(event.level.isClientside)
-        log(event.level.isClientside())
+        event.player.inventory:setItem(0,5915215)
+        event.player:sendMessage("hi bub")
     end)
-    log("did we error")
 end
