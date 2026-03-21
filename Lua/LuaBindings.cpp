@@ -9,6 +9,7 @@
 #include "../Minecraft.World/Commands/CommandDispatcher.h"
 #include "../Minecraft.World/Level/Level.h"
 #include "../Minecraft.Client/Network/PlayerConnection.h"
+#include "../Minecraft.World/Blocks/Tile.h"
 
 /* Server Includes */
 #include "Level/ServerLevel.h"
@@ -97,7 +98,8 @@ void LuaBindings::bindServerEvents(sol::state& lua) {
         "isDamaged", &ItemInstance::isDamaged,
         "damageValue", &ItemInstance::getDamageValue,
         "maxDamage", &ItemInstance::getMaxDamage,
-        "getAmount", &ItemInstance::count
+        "getAmount", &ItemInstance::count,
+        "id", &ItemInstance::id
     );
 
     lua.new_usertype<ServerPlayerGameMode>("ServerPlayerGameMode",
@@ -112,6 +114,7 @@ void LuaBindings::bindServerEvents(sol::state& lua) {
     lua["GameMode"]["ADVENTURE"] = 2;
 
     lua.new_usertype<ServerPlayer>("ServerPlayer",
+        "getHeldItem", &ServerPlayer::getCarriedItem,
         "setFoodLevel", [](ServerPlayer& player, int food) {
             player.getFoodData()->setFoodLevel(food);
         },
@@ -182,6 +185,15 @@ void LuaBindings::bindServerEvents(sol::state& lua) {
         "sendMessage", [](ServerPlayer& p, const std::string& message) {
             std::wstring wmessage(message.begin(), message.end());
             p.sendMessage(wmessage);
+        },
+        "destroyBlock", [](ServerPlayer& p, sol::object target, sol::this_state state) {
+            if (target.is<LuaVec3>()) {
+                auto vec3 = target.as<LuaVec3>();
+                if (p.level->getTile(vec3.x,vec3.y,vec3.z) == 0) return;
+                p.gameMode->destroyBlock(vec3.x, vec3.y, vec3.z);
+            }else {
+                CactusUtils::LuaException(state, "Not a valid Vec3 object");
+            }
         }
     );
 

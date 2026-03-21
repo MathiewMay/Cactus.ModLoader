@@ -21,13 +21,13 @@ public:
     static void log(const std::string &message);
 
     void refresh(sol::state& luaState,std::string_view (CactusMod::*getEntry)() const,bool prependPath = false);
-    void execute(sol::environment& (CactusMod::*getEnv)());
+    void execute(sol::environment& (CactusMod::*getEnv)(), std::string funcName, bool warn);
 
     void refreshServerScripts();
     void refreshClientScripts();
 
-    void executeServerScripts();
-    void executeClientScripts();
+    void executeServerScripts(std::string name = "main", bool warn = false);
+    void executeClientScripts(std::string name = "main", bool warn = false);
 
     static void _debugPrint(const std::string &output);
 
