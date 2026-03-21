@@ -34,6 +34,12 @@ public:
             if (!fn.valid()) continue;
             auto result = fn(&event);
 
+            if (!result.valid()) {
+                sol::error err = result;
+                fprintf(stderr, "[Lua] Error in '%s' listener: %s\n", event.eventName.c_str(), err.what());
+                continue;
+            }
+
             if (result.valid() && result.get_type() == sol::type::boolean && result.template get<bool>()) {
                 if constexpr (std::is_base_of_v<CancellableCactusEvent, E>) {
                     event.setCancelled(true);

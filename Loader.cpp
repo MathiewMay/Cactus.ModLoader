@@ -15,8 +15,8 @@ using string = std::string;
 
 Loader::Loader() {
     ModTextureAtlas::createInstance();
-    luaServer.open_libraries(sol::lib::base, sol::lib::string, sol::lib::table, sol::lib::package);
-    luaClient.open_libraries(sol::lib::base, sol::lib::string, sol::lib::table, sol::lib::package);
+    luaServer.open_libraries(sol::lib::base, sol::lib::string, sol::lib::table, sol::lib::package, sol::lib::math);
+    luaClient.open_libraries(sol::lib::base, sol::lib::string, sol::lib::table, sol::lib::package, sol::lib::math);
 
     auto panicHandler = [](lua_State* L) -> int {
         fprintf(stderr, "[Lua] PANIC: %s\n", lua_tostring(L, -1));
@@ -46,7 +46,7 @@ nlohmann::json Loader::getManifest(const string &filePath) {
 }
 
 void Loader::log(const string& message) {
-    app.DebugPrintf(("[Cactus ModLoader] [LOG] " + message + "\n").c_str());
+    app.DebugPrintf(("[Cactus ModLoader] " + message + "\n").c_str());
 }
 
 string Loader::loadFile(string fileName) {
@@ -160,31 +160,32 @@ void Loader::refreshClientScripts() {
     refresh(luaClient,&CactusMod::getClientEntry,false);
 }
 
-void Loader::execute(sol::environment& (CactusMod::*getEnv)()) {
+void Loader::execute(sol::environment& (CactusMod::*getEnv)(), std::string funcName, bool warn) {
     for (auto& [name, mod] : mods_) {
         std::string modName = std::string(mod.getName());
 
         sol::environment& env = (mod.*getEnv)();
         if (!env.valid()) continue;
 
-        sol::protected_function mainFunc = env["main"];
+        sol::protected_function fn = env[funcName];
 
-        if (mainFunc.valid()) {
-            auto result = mainFunc();
+        if (fn.valid()) {
+            auto result = fn();
             if (!result.valid()) {
                 sol::error err = result;
                 _debugPrint(("Error in '"+modName+"': "+err.what()).c_str());
             }
         } else {
-            _debugPrint(("Mod "+modName+" must have a 'main()' function in its global table, 'function "+modName+".main()' is missing"));
+            if (!warn) return;
+            _debugPrint(("Mod "+modName+" must have a '"+funcName+"()' function in its global table, 'function "+modName+"."+funcName+"()' is missing"));
         }
     }
 }
 
-void Loader::executeServerScripts() {
-    execute(&CactusMod::getServerEnv);
+void Loader::executeServerScripts(std::string name, bool warn) {
+    execute(&CactusMod::getServerEnv, name, warn);
 }
 
-void Loader::executeClientScripts() {
-    execute(&CactusMod::getClientEnv);
+void Loader::executeClientScripts(std::string name, bool warn) {
+    execute(&CactusMod::getClientEnv, name, warn);
 }

@@ -9,11 +9,14 @@
 #include "../Minecraft.World/Commands/CommandDispatcher.h"
 #include "../Minecraft.World/Level/Level.h"
 #include "../Minecraft.Client/Network/PlayerConnection.h"
+#include "../Minecraft.World/Blocks/Tile.h"
 
 /* Server Includes */
 #include "../../Minecraft.Client/Level/ServerLevel.h"
 #include "Level/ServerLevel.h"
 #include "Registry/ItemRegistry.h"
+#include "Registry/ItemFactory.h"
+
 #include "Server/Events/Item/ItemInteractEvent.h"
 #include "Server/Events/Player/PlayerBlockBreakEvent.h"
 #include "Server/Events/Player/PlayerBlockPlaceEvent.h"
@@ -26,11 +29,31 @@
 #include "../Minecraft.World/Items/Item.h"
 #include "../Minecraft.World/Network/Packets/PlayerAbilitiesPacket.h"
 
+#include "LuaStructs.h"
+
 void LuaBindings::bindCommonFunctions(const std::vector<sol::state*> &luaStates) {
     for (sol::state* lua : luaStates) {
         lua->set_function("log", [](const std::string &message) {
             Loader::log(message);
         });
+
+        lua->new_usertype<LuaVec3>("Vec3",
+            sol::constructors<LuaVec3(double, double, double)>(),
+            "x", &LuaVec3::x,
+            "y", &LuaVec3::y,
+            "z", &LuaVec3::z,
+            "distanceTo", &LuaVec3::distanceTo,
+            sol::meta_function::to_string, &LuaVec3::toString,
+            sol::meta_function::addition, &LuaVec3::addition,
+            sol::meta_function::subtraction, &LuaVec3::subtraction,
+            sol::meta_function::multiplication, &LuaVec3::multiplication,
+            sol::meta_function::division, &LuaVec3::division
+        );
+
+        lua->new_usertype<LuaBlock>("Block",
+            "pos", &LuaBlock::pos,
+            "id", &LuaBlock::id
+        );
     }
 }
 
@@ -61,13 +84,23 @@ void LuaBindings::bindServerEvents(sol::state& lua) {
         },
         "getItem", [](Inventory& inv, const int slot) {
             return inv.getItem(slot);
+        },
+        "clear", [](Inventory& inv) {
+            inv.clearInventory();
         }
     );
 
     lua.new_usertype<ItemInstance>("ItemInstance",
         "getHoverName", [](ItemInstance& item) {
             return item.getHoverName();
-        }
+        },
+        "isStackable", &ItemInstance::isStackable,
+        "isEnchanted", &ItemInstance::isEnchanted,
+        "isDamaged", &ItemInstance::isDamaged,
+        "damageValue", &ItemInstance::getDamageValue,
+        "maxDamage", &ItemInstance::getMaxDamage,
+        "getAmount", &ItemInstance::count,
+        "id", &ItemInstance::id
     );
 
     lua.new_usertype<ServerPlayerGameMode>("ServerPlayerGameMode",
@@ -82,6 +115,7 @@ void LuaBindings::bindServerEvents(sol::state& lua) {
     lua["GameMode"]["ADVENTURE"] = 2;
 
     lua.new_usertype<ServerPlayer>("ServerPlayer",
+        "getHeldItem", &ServerPlayer::getCarriedItem,
         "setFoodLevel", [](ServerPlayer& player, int food) {
             player.getFoodData()->setFoodLevel(food);
         },
@@ -94,8 +128,14 @@ void LuaBindings::bindServerEvents(sol::state& lua) {
         "setHealth", [](ServerPlayer& player, int health) {
             player.setHealth(health);
         },
-        "teleport", [](ServerPlayer& player, double x, double y, double z) {
-            player.teleportTo(x,y,z);
+        "pos", sol::property([](ServerPlayer& player) { return LuaVec3(player.x, player.y, player.z); }),
+        "teleport", [](ServerPlayer& player, sol::object target, sol::this_state state) {
+            if (target.is<LuaVec3>()) {
+                auto vec3 = target.as<LuaVec3>();
+                player.teleportTo(vec3.x, vec3.y, vec3.z);
+            }else {
+                CactusUtils::LuaException(state, "Not a valid Vec3 object");
+            }
         },
         "setCanFly", [](ServerPlayer& player, bool toggle) {
             // Toggles the PERMISSION to fly
@@ -143,26 +183,30 @@ void LuaBindings::bindServerEvents(sol::state& lua) {
         "setGameMode", [](ServerPlayer& player, int gameTypeId) {
             if (GameType* type = GameType::byId(gameTypeId)) player.setGameMode(type);
         },
-        "sendMessage", [](ServerPlayer& p, const std::wstring& message) {
-            p.sendMessage(message);
+        "sendMessage", [](ServerPlayer& p, const std::string& message) {
+            std::wstring wmessage(message.begin(), message.end());
+            p.sendMessage(wmessage);
+        },
+        "destroyBlock", [](ServerPlayer& p, sol::object target, sol::this_state state) {
+            if (target.is<LuaVec3>()) {
+                auto vec3 = target.as<LuaVec3>();
+                if (p.level->getTile(vec3.x,vec3.y,vec3.z) == 0) return;
+                p.gameMode->destroyBlock(vec3.x, vec3.y, vec3.z);
+            }else {
+                CactusUtils::LuaException(state, "Not a valid Vec3 object");
+            }
         }
     );
 
     lua.new_usertype<PlayerBlockBreakEvent>("PlayerBlockBreakEvent",
         "player", &PlayerBlockBreakEvent::player,
-        "x", &PlayerBlockBreakEvent::x,
-        "y", &PlayerBlockBreakEvent::y,
-        "z", &PlayerBlockBreakEvent::z,
-        "blockId", &PlayerBlockBreakEvent::blockId,
+        "block", &PlayerBlockBreakEvent::block,
         sol::base_classes, sol::bases<CancellableCactusEvent, CactusEvent>()
     );
 
     lua.new_usertype<PlayerBlockPlaceEvent>("PlayerBlockPlaceEvent",
         "player", &PlayerBlockPlaceEvent::player,
-        "x", &PlayerBlockPlaceEvent::x,
-        "y", &PlayerBlockPlaceEvent::y,
-        "z", &PlayerBlockPlaceEvent::z,
-        "blockId", &PlayerBlockPlaceEvent::blockId,
+        "block", &PlayerBlockPlaceEvent::block,
         sol::base_classes, sol::bases<CancellableCactusEvent, CactusEvent>()
     );
 
@@ -243,10 +287,34 @@ void LuaBindings::bindServerFunctions(sol::state& lua, MinecraftServer* server) 
 }
 
 void LuaBindings::bindClientFunctions(sol::state& lua) {
-    lua.set_function("registerItem", [](sol::this_environment env, const std::string& name, const std::string& texturePath) {
+    lua.new_enum<EBaseItem>("EBaseItem", {
+        {"Default", EBaseItem::Default},
+        {"Food", EBaseItem::Food},
+        {"Hoe", EBaseItem::Hoe},
+        {"Weapon", EBaseItem::Weapon},
+        {"Pickaxe", EBaseItem::Pickaxe},
+        {"Hatchet", EBaseItem::Hatchet}
+    });
+
+    lua.new_usertype<ItemDefinition>("ItemDefinition",
+        sol::constructors<ItemDefinition(sol::table)>(),
+        "type", &ItemDefinition::type,
+        "nutrition", &ItemDefinition::nutrition,
+        "saturationMod", &ItemDefinition::saturationMod,
+        "isMeat", &ItemDefinition::isMeat,
+        "tier", &ItemDefinition::tier
+    );
+
+    lua.new_usertype<Item::Tier>("Tier",
+        sol::constructors<Item::Tier(int,int,double,int,int)>(),
+        "getUses", &Item::Tier::getUses,
+        "getLevel", &Item::Tier::getLevel
+    );
+
+    lua.set_function("registerItem", [](sol::this_environment env, const std::string& name, const std::string& texturePath, const ItemDefinition& def) {
         sol::environment& modEnv = env;
         std::string envModId = modEnv["modId"];
         std::wstring modId = std::wstring(envModId.begin(), envModId.end());
-        return ItemRegistry::registerItem(modId, name, texturePath);
+        return ItemRegistry::registerItem(modId, name, def, texturePath);
     });
 }
