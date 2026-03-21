@@ -284,7 +284,9 @@ void LuaBindings::bindServerFunctions(sol::state& lua, MinecraftServer* server) 
         "getBlocksAndData", &ServerLevel::getBlocksAndData,
         "setBlocksAndData", &ServerLevel::setBlocksAndData,
         "getServer", &ServerLevel::getServer,
-        "isClientside", &ServerLevel::isClientSide
+        "isClientside", &ServerLevel::isClientSide,
+        "getTile", &ServerLevel::getTile,
+        "hasChunkAt", &ServerLevel::hasChunkAt
     );
 }
 
@@ -295,7 +297,8 @@ void LuaBindings::bindClientFunctions(sol::state& lua) {
         {"Hoe", EBaseItem::Hoe},
         {"Weapon", EBaseItem::Weapon},
         {"Pickaxe", EBaseItem::Pickaxe},
-        {"Hatchet", EBaseItem::Hatchet}
+        {"Hatchet", EBaseItem::Hatchet},
+        {"Shovel", EBaseItem::Shovel}
     });
 
     lua.new_usertype<ItemDefinition>("ItemDefinition",
@@ -319,6 +322,7 @@ void LuaBindings::bindClientFunctions(sol::state& lua) {
         std::wstring modId = std::wstring(envModId.begin(), envModId.end());
         return ItemRegistry::registerItem(modId, name, def, texturePath);
     });
+
    /* lua.set_function("registerBlock", [](sol::this_environment env, const std::string& name, const std::string& texturePath) {
         sol::environment& modEnv = env;
         std::string envModId = modEnv["modId"];
