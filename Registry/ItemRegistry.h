@@ -8,7 +8,7 @@ struct ItemDefinition;
 
 class ItemRegistry {
     public:
-        static int registerItem(const std::wstring& modId, const std::string& name,  const std::string& itemTextPath = "");
+        static int registerItem(const std::wstring& modId, const std::string& name, const ItemDefinition& def, const std::string& itemTextPath = "");
         static void changeLang(StringTable& m_stringTable);
 
         static int nextItemNameId();
