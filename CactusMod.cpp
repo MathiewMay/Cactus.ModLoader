@@ -26,6 +26,14 @@ std::string_view CactusMod::getClientEntry() const {
     return metadata.at("clientMain");
 };
 
+std::string_view CactusMod::getPathName() const {
+    return pathName;
+}
+
+void CactusMod::setPathName(std::string name) {
+    pathName = name;
+}
+
 void CactusMod::setServerEnv(sol::environment env) {
     serverEnv = std::move(env);
 };

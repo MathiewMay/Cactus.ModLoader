@@ -9,6 +9,8 @@ private:
     typedef std::unordered_map<std::string, std::string> Mapping;
     sol::environment serverEnv;
     sol::environment clientEnv;
+
+    std::string pathName;
 public:
     Mapping metadata;
 
@@ -23,7 +25,9 @@ public:
 
     std::string_view getServerEntry() const;
     std::string_view getClientEntry() const;
+    std::string_view getPathName() const;
 
+    void setPathName(std::string name);
     void setServerEnv(sol::environment env);
     void setClientEnv(sol::environment env);
 

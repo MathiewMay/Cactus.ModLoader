@@ -2,7 +2,7 @@
 #include "Client/Rendering/ModTextureAtlas.h"
 #include "../Minecraft.World/Items/Item.h"
 #include "ItemFactory.h"
-
+#include "../IDs.h"
 
 std::vector<std::wstring> ItemRegistry::langList(2000);
 int ItemRegistry::itemNameIdMax = 1937;
@@ -18,7 +18,7 @@ int ItemRegistry::nextItemId() {
     return itemIdMax;
 }
 
-int ItemRegistry::registerItem(const std::wstring& modId, const std::string& name, const ItemDefinition& def, const std::string& texturePath) {
+int ItemRegistry::registerItem(const std::wstring& path, const std::string& id, const std::string& name, std::string modId, const ItemDefinition& def, const std::string& texturePath) {
     int nameId = nextItemNameId();
     int itemId = nextItemId();
 
@@ -27,7 +27,7 @@ int ItemRegistry::registerItem(const std::wstring& modId, const std::string& nam
     if (!texturePath.empty() && ModTextureAtlas::getInstance() != nullptr) {
         std::wstring wpath(texturePath.begin(), texturePath.end());
 
-        BufferedImage* img = new BufferedImage(wpath, true, false, L"mods/"+modId+L"/");
+        BufferedImage* img = new BufferedImage(wpath, true, false, L"mods/"+path+L"/");
 
         if (img != nullptr) {
             int w = img->getWidth();
@@ -45,6 +45,8 @@ int ItemRegistry::registerItem(const std::wstring& modId, const std::string& nam
             ->handEquipped()
             ->setDescriptionId(nameId)
             ->setUseDescriptionId(IDS_DESC_STICK);
+            IDMapping::add(modId,id,false,itemId);
+
         }else {
             Item::items[itemId] = (new Item(itemId))->setTextureName(L"stick")->handEquipped()->setDescriptionId(nameId)->setUseDescriptionId(IDS_DESC_STICK);
         }

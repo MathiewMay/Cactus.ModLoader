@@ -93,10 +93,7 @@ void Loader::collectMods() {
         if (missingRequired) continue;
 
         string folderName = modEntry.path().filename().string();
-        if (folderName != m.getModID()) {
-            _debugPrint("Folder '"+folderName+"' should match modId '"+std::string(m.getModID()));
-            continue;
-        }
+        m.setPathName(folderName);
         mods_[m.getName()] = m;
     }
 }
@@ -107,9 +104,10 @@ void Loader::refresh(sol::state& luaState,std::string_view (CactusMod::*getEntry
     for (auto& [name,mod] : mods_) {
         std::string modName = std::string(mod.getName());
         std::string modId = std::string(mod.getModID());
+        std::string folderName = std::string(mod.getPathName());
         std::string modEntry = std::string((mod.*getEntry)());
 
-        std::string scriptPath = "mods/" + modId + "/" + modEntry;
+        std::string scriptPath = "mods/" + folderName + "/" + modEntry;
         if (!fs::exists(scriptPath)) {
             _debugPrint("Could not find file for " + scriptPath + " for mod " + modName);
             continue;
@@ -117,17 +115,18 @@ void Loader::refresh(sol::state& luaState,std::string_view (CactusMod::*getEntry
 
         if (prependPath) {
             std::string currentPath = luaState["package"]["path"];
-            luaState["package"]["path"] = "mods/" + modId + "/?.lua;" + currentPath;
+            luaState["package"]["path"] = "mods/" + folderName + "/?.lua;" + currentPath;
         }
 
         sol::environment modEnv(luaState, sol::create, luaState.globals());
         modEnv["modId"] = modId;
+        modEnv["pathName"] = folderName;
 
         sol::protected_function_result result;
         try {
             result = luaState.safe_script_file(scriptPath, modEnv, sol::script_pass_on_error);
         } catch (const sol::error& e) {
-            _debugPrint("There is a lua error in '"+modId+"/"+modEntry+"' error: "+e.what());
+            _debugPrint("There is a lua error in '"+folderName+"/"+modEntry+"' error: "+e.what());
             failedMods.push_back(mod);
             continue;
         }
@@ -141,7 +140,7 @@ void Loader::refresh(sol::state& luaState,std::string_view (CactusMod::*getEntry
             _debugPrint(modId + "'s '" + modEntry + "' has been loaded successfully");
         } else {
             sol::error err = result;
-            _debugPrint("There is a lua error in '"+modId+"/"+modEntry+"' error: "+err.what());
+            _debugPrint("There is a lua error in '"+folderName+"/"+modEntry+"' error: "+err.what());
             failedMods.push_back(mod);
         }
     }
