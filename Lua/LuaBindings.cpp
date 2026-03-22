@@ -85,6 +85,7 @@ void LuaBindings::bindServerEvents(sol::state& lua) {
             auto [exists, id] = IDMapping::get(identifier);
             if (!exists) {
                 CactusUtils::LuaException(state, "Identifier "+identifier+" does not exist");
+                return;
             }
             if (Item::items[id] == nullptr) {
                 CactusUtils::LuaException(state, "Item id "+std::to_string(id)+" does not exist");
