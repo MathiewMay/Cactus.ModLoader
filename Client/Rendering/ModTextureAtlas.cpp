@@ -11,6 +11,8 @@
 
 #include <cstring>
 
+#include "Textures/Stitching/PreStitchedTextureMap.h"
+
 ModTextureAtlas* ModTextureAtlas::instance = nullptr;
 
 void ModTextureAtlas::createInstance() {
@@ -84,7 +86,7 @@ void ModTextureAtlas::build() {
 
     for (TextureHolder* h : holders) delete h;
 
-    pending.clear();
+    //pending.clear();
     built = true;
 }
 
@@ -103,4 +105,29 @@ bool ModTextureAtlas::isModIcon(Icon* icon) {
 
 int ModTextureAtlas::getAtlasGlId() {
     return atlasTexture ? atlasTexture->getGlId() : -1;
+}
+
+void ModTextureAtlas::registerPendingTexturesIntoTerrainAtlas(PreStitchedTextureMap *terrainMap) {
+    for (const PendingTexture& pendingTexture : pending) {
+        terrainMap->registerIconFromPixels(pendingTexture.name, pendingTexture.pixels, pendingTexture.width, pendingTexture.height);
+    }
+}
+
+void ModTextureAtlas::finalizeIntoTerrainMap(PreStitchedTextureMap* terrainMap) {
+    if (pending.empty()) return;
+
+    std::vector<std::pair<std::wstring, std::vector<int>>> modTextures;
+    for (const PendingTexture& pt : pending) {
+        modTextures.push_back({ pt.name, pt.pixels });
+    }
+
+    terrainMap->expandWithModTextures(modTextures, 16, 16);
+
+    for (const PendingTexture& pt : pending) {
+        Icon* icon = terrainMap->registerIcon(pt.name);
+        if (icon) icons[pt.name] = dynamic_cast<StitchedTexture*>(icon);
+    }
+
+    pending.clear();
+    stitchedIntoTerrain = true;
 }

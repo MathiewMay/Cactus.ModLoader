@@ -3,7 +3,8 @@ function main()
         local player = event.player
 
         player.inventory:setItem(0, 407)
-        player.inventory:setItem(1, 408)
+        player.inventory:setItem(1, 172)
+        player.inventory:setItem(2, 173)
     end)
 
     registerEvent("PlayerBlockPlaceEvent", function(event)

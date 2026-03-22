@@ -1,6 +1,5 @@
 #include "BlockRegistry.h"
 
-#include <set>
 #include <unordered_map>
 #include "ItemRegistry.h"
 #include "../Minecraft.World/Blocks/Tile.h"
@@ -8,28 +7,27 @@
 #include "../Client/Rendering/ModTextureAtlas.h"
 #include "../Minecraft.World/Items/Item.h"
 #include "../Minecraft.World/Blocks/Material.h"
+#include "Client/ModTile.h"
 #include "DurangoMedia/loc/strings.h"
 
-struct blockData {
-    std::wstring modId;
-    std::string name;
-    std::string texturePath;
-    int nameId;
-    int itemId;
+int itemIdMax = 171;
 
-    blockData(const std::wstring& modId, const std::string& name, const std::string& texturePath, int nameId, int itemId) :
-        modId(modId), name(name), texturePath(texturePath), nameId(nameId), itemId(itemId) {}
-
-    bool operator<(const blockData& other) const {
-        return nameId < other.nameId && itemId < other.itemId;
+int BlockRegistry::nextItemId() {
+    itemIdMax += 1;
+    if (itemIdMax == 255) {
+        return -1;
     }
-};
+    return itemIdMax;
+}
 
-std::multiset<blockData> toInit;
 
 int BlockRegistry::registerBlock(const std::wstring& modId, const std::string& name, const std::string& texturePath) {
     int nameId = ItemRegistry::nextItemNameId();
-    int itemId = ItemRegistry::nextItemId();
+    int itemId = BlockRegistry::nextItemId();
+
+    if (itemId == -1) {
+        return -1;
+    }
 
     std::wstring wname(name.begin(), name.end());
 
@@ -51,10 +49,10 @@ int BlockRegistry::registerBlock(const std::wstring& modId, const std::string& n
             ModTextureAtlas::getInstance()->registerTexture(wname, std::move(pixels), w, h);
             delete img;
 
-            Tile* tile = (new Tile(itemId, Material::dirt))
-                ->setTextureName(wname)
-                ->setDescriptionId(nameId)
-                ->setUseDescriptionId(IDS_DESC_STICK);
+            new ModTile(itemId, Material::dirt, wname);
+
+            Tile::tiles[itemId]->setDescriptionId(nameId);
+            Tile::tiles[itemId]->setUseDescriptionId(IDS_DESC_STICK);
 
             Item::items[itemId] = (new TileItem(itemId - 256))
                 ->setTextureName(wname)

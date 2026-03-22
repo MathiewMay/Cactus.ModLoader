@@ -4,6 +4,7 @@ class Texture;
 class SimpleIcon;
 class StitchedTexture;
 class Icon;
+class PreStitchedTextureMap;
 
 class ModTextureAtlas {
 public:
@@ -16,6 +17,10 @@ public:
     StitchedTexture* getIcon(const std::wstring& name);
     bool isModIcon(Icon* icon);
     int getAtlasGlId();
+
+    void registerPendingTexturesIntoTerrainAtlas(PreStitchedTextureMap* terrainMap);
+    void finalizeIntoTerrainMap(PreStitchedTextureMap *terrainMap);
+    bool isStitchedToTerrain() const { return stitchedIntoTerrain; }
 
 private:
     static ModTextureAtlas* instance;
@@ -31,4 +36,5 @@ private:
     std::unordered_map<std::wstring, SimpleIcon*> icons;
     Texture* atlasTexture = nullptr;
     bool built = false;
+    bool stitchedIntoTerrain = false;
 };

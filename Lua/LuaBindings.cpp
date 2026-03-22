@@ -323,10 +323,15 @@ void LuaBindings::bindClientFunctions(sol::state& lua) {
         return ItemRegistry::registerItem(modId, name, def, texturePath);
     });
 
-    lua.set_function("registerBlock", [](sol::this_environment env, const std::string& name, const std::string& texturePath) {
+    lua.set_function("registerBlock", [](sol::this_environment env, const std::string& name, const std::string& texturePath, sol::this_state state) {
         sol::environment& modEnv = env;
         std::string envModId = modEnv["modId"];
         std::wstring modId = std::wstring(envModId.begin(), envModId.end());
-        return BlockRegistry::registerBlock(modId, name, texturePath);
+        int registeredBlock = BlockRegistry::registerBlock(modId, name, texturePath);
+        if (registeredBlock == -1) {
+            CactusUtils::LuaException(state, "The block registry limit has been reached, can't register more than 81 custom blocks");
+            return -1;
+        }
+        return registeredBlock;
     });
 }

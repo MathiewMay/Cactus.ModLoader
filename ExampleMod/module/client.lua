@@ -4,6 +4,7 @@ function main()
          tier=Tier.new(3, 5000, 5000, 5000, 5000)
      }))
     id2 = registerBlock("Amethyst Block", "/amethyst_block.png", "")
+    id2 = registerBlock("Andesite", "/andesite.png", "")
 
 
     log(tostring(id))
