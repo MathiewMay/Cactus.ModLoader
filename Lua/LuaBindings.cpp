@@ -14,9 +14,12 @@
 /* Server Includes */
 #include "../../Minecraft.Client/Level/ServerLevel.h"
 #include "Level/ServerLevel.h"
-#include "Registry/ItemRegistry.h"
-#include "Registry/ItemFactory.h"
-#include "../Registry/BlockRegistry.h"
+#include "Registry/Item/ItemRegistry.h"
+#include "Registry/Item/ItemFactory.h"
+#include "Registry/Block/BlockRegistry.h"
+
+#include "Registry/IDs.h"
+
 #include "Server/Events/Item/ItemInteractEvent.h"
 #include "Server/Events/Player/PlayerBlockBreakEvent.h"
 #include "Server/Events/Player/PlayerBlockPlaceEvent.h"
@@ -24,6 +27,7 @@
 #include "Server/Events/Player/PlayerJoinEvent.h"
 #include "Server/Events/Player/PlayerFlightStartedEvent.h"
 #include "Server/Events/Player/PlayerFlightEndedEvent.h"
+
 #include "Common/CactusUtils.h"
 
 #include "../Minecraft.World/Items/Item.h"
@@ -77,12 +81,17 @@ void LuaBindings::bindServerEvents(sol::state& lua) {
     );
 
     lua.new_usertype<Inventory>("Inventory",
-        "setItem", [](Inventory& inv, const int slot, const int itemId, sol::this_state state) {
-            if (Item::items[itemId] == nullptr) {
-                CactusUtils::LuaException(state, "Item id "+std::to_string(itemId)+" does not exist");
+        "setItem", [](Inventory& inv, const int slot, const std::string& identifier, sol::this_state state) {
+            auto [exists, id] = IDMapping::get(identifier);
+            if (!exists) {
+                CactusUtils::LuaException(state, "Identifier "+identifier+" does not exist");
                 return;
             }
-            inv.setItem(slot, std::make_shared<ItemInstance>(itemId, 1, 0));
+            if (Item::items[id] == nullptr) {
+                CactusUtils::LuaException(state, "Item id "+std::to_string(id)+" does not exist");
+                return;
+            }
+            inv.setItem(slot, std::make_shared<ItemInstance>(id, 1, 0));
         },
         "getItem", [](Inventory& inv, const int slot) {
             return inv.getItem(slot);
@@ -316,18 +325,21 @@ void LuaBindings::bindClientFunctions(sol::state& lua) {
         "getLevel", &Item::Tier::getLevel
     );
 
-    lua.set_function("registerItem", [](sol::this_environment env, const std::string& name, const std::string& texturePath, const ItemDefinition& def) {
+    lua.set_function("registerItem", [](sol::this_environment env,const std::string& id, const std::string& name, const std::string& texturePath, const ItemDefinition& def) {
         sol::environment& modEnv = env;
-        std::string envModId = modEnv["modId"];
-        std::wstring modId = std::wstring(envModId.begin(), envModId.end());
-        return ItemRegistry::registerItem(modId, name, def, texturePath);
+        std::string envPath = modEnv["pathName"];
+        std::string modId = modEnv["modId"];
+        std::wstring path = std::wstring(envPath.begin(), envPath.end());
+        return ItemRegistry::registerItem(path, id, name, modId, def, texturePath);
     });
 
-    lua.set_function("registerBlock", [](sol::this_environment env, const std::string& name, const std::string& texturePath, sol::this_state state) {
+    lua.set_function("registerBlock", [](sol::this_environment env,const std::string& id, const std::string& name, const std::string& texturePath, sol::this_state state) {
         sol::environment& modEnv = env;
-        std::string envModId = modEnv["modId"];
-        std::wstring modId = std::wstring(envModId.begin(), envModId.end());
-        int registeredBlock = BlockRegistry::registerBlock(modId, name, texturePath);
+        std::string envPath = modEnv["pathName"];
+        std::string modId = modEnv["modId"];
+        std::wstring path = std::wstring(envPath.begin(), envPath.end());
+
+        int registeredBlock = BlockRegistry::registerBlock(path, id, name, modId, texturePath);
         if (registeredBlock == -1) {
             CactusUtils::LuaException(state, "The block registry limit has been reached, can't register more than 81 custom blocks");
             return -1;

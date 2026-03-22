@@ -1,7 +1,7 @@
 #include "BlockRegistry.h"
 
 #include <unordered_map>
-#include "ItemRegistry.h"
+#include "../Item/ItemRegistry.h"
 #include "../Minecraft.World/Blocks/Tile.h"
 #include "../../Minecraft.World/Items/TileItems/TileItem.h"
 #include "../Client/Rendering/ModTextureAtlas.h"
@@ -21,7 +21,7 @@ int BlockRegistry::nextItemId() {
 }
 
 
-int BlockRegistry::registerBlock(const std::wstring& modId, const std::string& name, const std::string& texturePath) {
+int BlockRegistry::registerBlock(const std::wstring& path, const std::string& id, const std::string& name, std::string modId, const std::string& texturePath) {
     int nameId = ItemRegistry::nextItemNameId();
     int itemId = BlockRegistry::nextItemId();
 
@@ -34,7 +34,7 @@ int BlockRegistry::registerBlock(const std::wstring& modId, const std::string& n
     if (!texturePath.empty() && ModTextureAtlas::getInstance() != nullptr) {
         std::wstring wpath(texturePath.begin(), texturePath.end());
 
-        BufferedImage* img = new BufferedImage(wpath, true, false, L"mods/"+modId+L"/");
+        BufferedImage* img = new BufferedImage(wpath, true, false, L"mods/"+path+L"/");
 
         if (img != nullptr) {
             int w = img->getWidth();
@@ -59,6 +59,8 @@ int BlockRegistry::registerBlock(const std::wstring& modId, const std::string& n
                 ->handEquipped()
                 ->setDescriptionId(nameId)
                 ->setUseDescriptionId(IDS_DESC_STICK);
+
+            IDMapping::add(modId,id,true,itemId);
         } else {
             (new Tile(itemId, Material::grass, true))->setTextureName(L"dirt")->setDescriptionId(nameId)->setUseDescriptionId(IDS_DESC_ANVIL);
             Item::items[itemId] = (new TileItem(itemId-256))->setTextureName(L"stick")->handEquipped()->setDescriptionId(nameId)->setUseDescriptionId(IDS_DESC_STICK);

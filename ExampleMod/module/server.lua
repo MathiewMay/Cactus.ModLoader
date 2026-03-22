@@ -2,9 +2,9 @@ function main()
 	registerEvent("PlayerJoinEvent", function(event)
         local player = event.player
 
-        player.inventory:setItem(0, 407)
-        player.inventory:setItem(1, 172)
-        player.inventory:setItem(2, 173)
+        player.inventory:setItem(0, "example_mod:amethyst_cluster")
+        player.inventory:setItem(1, "example_mod:amethyst_block")
+        player.inventory:setItem(2, "example_mod:andesite")
     end)
 
     registerEvent("PlayerBlockPlaceEvent", function(event)
