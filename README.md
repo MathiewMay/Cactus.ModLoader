@@ -11,13 +11,13 @@ The scope of this project is to have a fork-agnostic and cross-platform Mod Load
 
 Goals: 
 
-* Add custom block and item registration with custom textures 
-* Event system
-* Client and server modding using LUA scripting (already implemented)
+* Add custom block and item registration with custom textures (implemented)
+* Event system (implemented)
+* Client and server modding using LUA scripting (implemented)
 * Allow for modding the UI
 * Custom generation and dimensions
 * Port Cactus ModLoader to Minecraft Java Edition
-* String ID system for items and blocks
+* String ID system for items and blocks (implemented)
 * More...
 
 # Building
