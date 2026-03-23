@@ -1,7 +1,7 @@
 #include "IDs.h"
-#include "../Minecraft.World/Items/Item.h"
-#include "../Minecraft.World/Blocks/Tile.h"
-#include <stdexcept>
+
+#include "Minecraft.World/Items/Item.h"
+#include "Minecraft.World/Blocks/Tile.h"
 
 std::unordered_map<std::string, IDMapping::MappedItem> IDMapping::stringToID;
 

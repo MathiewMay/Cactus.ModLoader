@@ -1,8 +1,9 @@
 #pragma once
 
-#include "../Minecraft.Client/Utils/StringTable.h"
 #include <vector>
 #include <string>
+
+#include "Minecraft.Client/Utils/StringTable.h"
 
 struct ItemDefinition;
 

@@ -1,6 +1,7 @@
 #include "CactusMod.h"
+
 #include <string_view>
-#include "includes/sol/sol.hpp"
+#include "sol/sol.hpp"
 
 std::string_view CactusMod::getName() const {
     return metadata.at("name");

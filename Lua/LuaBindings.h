@@ -1,5 +1,9 @@
 #pragma once
 
+#include "Minecraft.Client/MinecraftServer.h"
+
+#include "sol/sol.hpp"
+
 class LuaBindings {
 public:
     static void bindCommonFunctions(const std::vector<sol::state *> &luaStates);

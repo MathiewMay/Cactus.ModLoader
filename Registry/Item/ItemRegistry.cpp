@@ -1,8 +1,10 @@
 #include "ItemRegistry.h"
+
+#include "Minecraft.World/Items/Item.h"
+
 #include "Client/Rendering/ModTextureAtlas.h"
-#include "../Minecraft.World/Items/Item.h"
 #include "ItemFactory.h"
-#include "../IDs.h"
+#include "Registry/IDs.h"
 
 std::vector<std::wstring> ItemRegistry::langList(2000);
 int ItemRegistry::itemNameIdMax = 1937;

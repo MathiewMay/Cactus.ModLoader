@@ -1,7 +1,8 @@
 #pragma once
 
-#include "../../../Common/EventSystem/CactusEvent.h"
-#include "../../../../Minecraft.Client/Player/ServerPlayer.h"
+#include "Minecraft.Client/Player/ServerPlayer.h"
+
+#include "Common/EventSystem/CactusEvent.h"
 
 struct ItemInteractEvent final : public CactusEvent {
     ItemInstance* item;

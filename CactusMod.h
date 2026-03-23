@@ -2,7 +2,7 @@
 
 #include <string>
 #include <unordered_map>
-#include "includes/sol/sol.hpp"
+#include "sol/sol.hpp"
 
 class CactusMod {
 private:

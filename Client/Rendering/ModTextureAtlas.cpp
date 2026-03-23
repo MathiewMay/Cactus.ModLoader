@@ -1,17 +1,17 @@
 #include "ModTextureAtlas.h"
 
-#include "../../Minecraft.Client/Textures/Texture.h"
-#include "../../Minecraft.Client/Textures/TextureManager.h"
-#include "../../Minecraft.Client/Textures/BufferedImage.h"
-#include "../../Minecraft.Client/Textures/TextureHolder.h"
-#include "../../Minecraft.Client/UI/SimpleIcon.h"
-#include "../../Minecraft.Client/Textures/Stitching/StitchedTexture.h"
-#include "../../Minecraft.Client/Textures/Stitching/StitchSlot.h"
-#include "../../Minecraft.Client/Textures/Stitching/Stitcher.h"
+#include "Minecraft.Client/Textures/Texture.h"
+#include "Minecraft.Client/Textures/TextureManager.h"
+#include "Minecraft.Client/Textures/BufferedImage.h"
+#include "Minecraft.Client/Textures/TextureHolder.h"
+#include "Minecraft.Client/UI/SimpleIcon.h"
+#include "Minecraft.Client/Textures/Stitching/StitchedTexture.h"
+#include "Minecraft.Client/Textures/Stitching/StitchSlot.h"
+#include "Minecraft.Client/Textures/Stitching/Stitcher.h"
+#include "Minecraft.Client/Textures/Stitching/PreStitchedTextureMap.h"
 
 #include <cstring>
 
-#include "Textures/Stitching/PreStitchedTextureMap.h"
 
 ModTextureAtlas* ModTextureAtlas::instance = nullptr;
 

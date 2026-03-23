@@ -1,13 +1,14 @@
 #pragma once
 
+#include "Minecraft.World/Items/Item.h"
+#include "Minecraft.World/Items/FoodItem.h"
+#include "Minecraft.World/Items/HoeItem.h"
+#include "Minecraft.World/Items/WeaponItem.h"
+#include "Minecraft.World/Items/PickaxeItem.h"
+#include "Minecraft.World/Items/HatchetItem.h"
+#include "Minecraft.World/Items/ShovelItem.h"
+
 #include "includes/sol/sol.hpp"
-#include "../../Minecraft.World/Items/Item.h"
-#include "../../Minecraft.World/Items/FoodItem.h"
-#include "../../Minecraft.World/Items/HoeItem.h"
-#include "../../Minecraft.World/Items/WeaponItem.h"
-#include "../../Minecraft.World/Items/PickaxeItem.h"
-#include "../../Minecraft.World/Items/HatchetItem.h"
-#include "../../Minecraft.World/Items/ShovelItem.h"
 
 enum EBaseItem {
     Default,

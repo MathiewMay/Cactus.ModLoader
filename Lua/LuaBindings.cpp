@@ -12,12 +12,14 @@
 #include "../Minecraft.World/Blocks/Tile.h"
 
 /* Server Includes */
-#include "../../Minecraft.Client/Level/ServerLevel.h"
-#include "Level/ServerLevel.h"
+
+#include "Minecraft.World/Network/Packets/PlayerAbilitiesPacket.h"
+#include "Minecraft.Client/Level/ServerLevel.h"
+#include "Minecraft.World/Items/Item.h"
+
 #include "Registry/Item/ItemRegistry.h"
 #include "Registry/Item/ItemFactory.h"
 #include "Registry/Block/BlockRegistry.h"
-
 #include "Registry/IDs.h"
 
 #include "Server/Events/Item/ItemInteractEvent.h"
@@ -29,11 +31,6 @@
 #include "Server/Events/Player/PlayerFlightEndedEvent.h"
 
 #include "Common/CactusUtils.h"
-
-#include "../Minecraft.World/Items/Item.h"
-#include "../Minecraft.World/Blocks/Tile.h"
-#include "../Minecraft.World/Blocks/Material.h"
-#include "../Minecraft.World/Network/Packets/PlayerAbilitiesPacket.h"
 #include "LuaStructs.h"
 
 

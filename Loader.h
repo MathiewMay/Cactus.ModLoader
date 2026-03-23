@@ -3,11 +3,10 @@
 #include "Common/EventSystem/EventBus.h"
 #include "CactusMod.h"
 
-#include "includes/sol/sol.hpp"
-#include "includes/json/json.hpp"
+#include "sol/sol.hpp"
+#include "json/json.hpp"
 
 class MinecraftServer;
-
 
 constexpr const char* requiredMetadata[] = {"modId","version","name","serverMain","clientMain"};
 class Loader {

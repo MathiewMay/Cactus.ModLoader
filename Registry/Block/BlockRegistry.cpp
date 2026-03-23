@@ -1,14 +1,16 @@
 #include "BlockRegistry.h"
 
 #include <unordered_map>
-#include "../Item/ItemRegistry.h"
-#include "../Minecraft.World/Blocks/Tile.h"
-#include "../../Minecraft.World/Items/TileItems/TileItem.h"
-#include "../Client/Rendering/ModTextureAtlas.h"
-#include "../Minecraft.World/Items/Item.h"
-#include "../Minecraft.World/Blocks/Material.h"
+
+#include "Minecraft.Assets/DurangoMedia/loc/strings.h"
+#include "Minecraft.World/Blocks/Tile.h"
+#include "Minecraft.World/Items/TileItems/TileItem.h"
+#include "Minecraft.World/Items/Item.h"
+#include "Minecraft.World/Blocks/Material.h"
+
+#include "Client/Rendering/ModTextureAtlas.h"
+#include "Registry/Item/ItemRegistry.h"
 #include "Client/ModTile.h"
-#include "DurangoMedia/loc/strings.h"
 #include "Registry/IDs.h"
 
 int itemIdMax = 171;

@@ -1,7 +1,6 @@
 #pragma once
 
-#include "../../../Common/EventSystem/CactusEvent.h"
-#include "../../../../Minecraft.Client/Player/ServerPlayer.h"
+#include "Common/EventSystem/CactusEvent.h"
 
 struct PlayerConnectionEvent final : public CactusEvent {
     ServerPlayer* player;

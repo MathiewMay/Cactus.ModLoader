@@ -4,8 +4,9 @@
 #include <string>
 #include <unordered_map>
 #include <type_traits>
-#include "../../includes/sol/sol.hpp"
+
 #include "CactusEvent.h"
+#include "sol/sol.hpp"
 
 class EventBus {
 public:

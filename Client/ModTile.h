@@ -1,8 +1,10 @@
 #pragma once
-#include "../../Minecraft.World/Util/Icon.h"
-#include "../Minecraft.World/Blocks/Tile.h"
+
+#include "Minecraft.Client/Textures/Stitching/StitchedTexture.h"
+#include "Minecraft.World/Util/Icon.h"
+#include "Minecraft.World/Blocks/Tile.h"
+
 #include "Rendering/ModTextureAtlas.h"
-#include "Textures/Stitching/StitchedTexture.h"
 
 class ModTile : public Tile {
     std::wstring m_modTextureName;
