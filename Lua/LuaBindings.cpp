@@ -81,17 +81,22 @@ void LuaBindings::bindServerEvents(sol::state& lua) {
     );
 
     lua.new_usertype<Inventory>("Inventory",
-        "setItem", [](Inventory& inv, const int slot, const std::string& identifier, sol::this_state state) {
-            auto [exists, id] = IDMapping::get(identifier);
-            if (!exists) {
-                CactusUtils::LuaException(state, "Identifier "+identifier+" does not exist");
+        "setItem", [](Inventory& inv, const int slot, int count, const std::string& identifier, sol::this_state state) {
+            IDMapping::MappedItem mapping = IDMapping::get(identifier);
+            if (mapping.id == 0 && identifier != "minecraft:air") {
+                CactusUtils::LuaException(state, "Identifier " + identifier + " does not exist");
                 return;
             }
-            if (Item::items[id] == nullptr) {
-                CactusUtils::LuaException(state, "Item id "+std::to_string(id)+" does not exist");
+            if (Item::items[mapping.id] == nullptr) {
+                CactusUtils::LuaException(state, "Item id " + std::to_string(mapping.id) + " is null in Item::items");
                 return;
             }
-            inv.setItem(slot, std::make_shared<ItemInstance>(id, 1, 0));
+            if (count <= 0) {
+                CactusUtils::LuaException(state, "Item count is zero");
+                return;
+            }
+
+            inv.setItem(slot, std::make_shared<ItemInstance>(mapping.id, count, mapping.aux));
         },
         "getItem", [](Inventory& inv, const int slot) {
             return inv.getItem(slot);

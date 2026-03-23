@@ -9,6 +9,7 @@
 #include "../Minecraft.World/Blocks/Material.h"
 #include "Client/ModTile.h"
 #include "DurangoMedia/loc/strings.h"
+#include "Registry/IDs.h"
 
 int itemIdMax = 171;
 

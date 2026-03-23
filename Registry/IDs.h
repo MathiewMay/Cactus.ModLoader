@@ -9,10 +9,12 @@ public:
     struct MappedItem {
         int id;
         bool isBlock;
+        int aux;
     };
 
     static std::unordered_map<std::string, MappedItem> stringToID;
     static void staticCtor();
     static void add(std::string ns, std::string name, bool isBlock, int id);
-    static std::pair<bool,int> get(std::string k);
+
+    static MappedItem get(std::string k);
 };
