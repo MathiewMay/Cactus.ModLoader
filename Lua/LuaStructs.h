@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Cactus.ModLoader/Registry/IDs.h"
+
 struct LuaVec3 {
     double x, y, z;
     LuaVec3(double x, double y, double z) : x(x), y(y), z(z) {}
@@ -26,4 +28,15 @@ struct LuaVec3 {
 struct LuaBlock {
     LuaVec3 pos;
     int id;
+    int aux;
+
+    std::string getOID() const {
+        std::ostringstream oss;
+        oss << id << ':' << aux;
+        return oss.str();
+    }
+
+    std::string getID() const {
+        return IDMapping::get()->getByID(id, aux);
+    }
 };

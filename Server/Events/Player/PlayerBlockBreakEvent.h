@@ -7,8 +7,8 @@ struct PlayerBlockBreakEvent final : public CancellableCactusEvent {
     ServerPlayer* player;
     LuaBlock block;
 
-    /* CactusModLoader [IMPL-AT] (Minecraft.Client/Network/PlayerConnection.cpp) */
-    PlayerBlockBreakEvent(ServerPlayer* player, int x, int y, int z, int blockId) : player(player), block{LuaVec3(x,y,z), blockId} {
+    /* CactusModLoader [IMPL-AT] (Minecraft.Client/Player/ServerPlayerGameMode.cpp) */
+    PlayerBlockBreakEvent(ServerPlayer* player, int x, int y, int z, int blockId, int blockAux) : player(player), block{LuaVec3(x,y,z), blockId, blockAux} {
         eventName = "PlayerBlockBreakEvent";
     }
 };

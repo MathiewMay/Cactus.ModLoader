@@ -63,7 +63,7 @@ int BlockRegistry::registerBlock(const std::wstring& path, const std::string& id
                 ->setDescriptionId(nameId)
                 ->setUseDescriptionId(IDS_DESC_STICK);
 
-            IDMapping::add(modId,id,true,itemId);
+            IDMapping::get()->add(modId,id,true,itemId);
         } else {
             (new Tile(itemId, Material::grass, true))->setTextureName(L"dirt")->setDescriptionId(nameId)->setUseDescriptionId(IDS_DESC_ANVIL);
             Item::items[itemId] = (new TileItem(itemId-256))->setTextureName(L"stick")->handEquipped()->setDescriptionId(nameId)->setUseDescriptionId(IDS_DESC_STICK);

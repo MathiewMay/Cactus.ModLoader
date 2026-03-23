@@ -55,7 +55,8 @@ void LuaBindings::bindCommonFunctions(const std::vector<sol::state*> &luaStates)
 
         lua->new_usertype<LuaBlock>("Block",
             "pos", &LuaBlock::pos,
-            "id", &LuaBlock::id
+            "id", sol::property(&LuaBlock::getID),
+            "oid", sol::property(&LuaBlock::getOID)
         );
     }
 }
@@ -79,7 +80,7 @@ void LuaBindings::bindServerEvents(sol::state& lua) {
 
     lua.new_usertype<Inventory>("Inventory",
         "setItem", [](Inventory& inv, const int slot, int count, const std::string& identifier, sol::this_state state) {
-            IDMapping::MappedItem mapping = IDMapping::get(identifier);
+            IDMapping::MappedItem mapping = IDMapping::get()->getID(identifier);
             if (mapping.id == 0 && identifier != "minecraft:air") {
                 CactusUtils::LuaException(state, "Identifier " + identifier + " does not exist");
                 return;

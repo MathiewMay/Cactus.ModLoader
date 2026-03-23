@@ -47,7 +47,7 @@ int ItemRegistry::registerItem(const std::wstring& path, const std::string& id, 
             ->handEquipped()
             ->setDescriptionId(nameId)
             ->setUseDescriptionId(IDS_DESC_STICK);
-            IDMapping::add(modId,id,false,itemId);
+            IDMapping::get()->add(modId,id,false,itemId);
 
         }else {
             Item::items[itemId] = (new Item(itemId))->setTextureName(L"stick")->handEquipped()->setDescriptionId(nameId)->setUseDescriptionId(IDS_DESC_STICK);
