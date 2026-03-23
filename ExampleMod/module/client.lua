@@ -7,6 +7,7 @@ function main()
     id2 = registerBlock("amethyst_block", "Amethyst Block", "/amethyst_block.png", "")
     id2 = registerBlock("andesite", "Andesite", "/andesite.png", "")
 
+
     log(tostring(id))
     log(tostring(id2))
 end
